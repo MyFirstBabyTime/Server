@@ -7,3 +7,8 @@ type ParentAuth struct {
 	ID   string `json:"id" validate:"required"`
 	PW   string `json:"pw" validate:"required"`
 }
+
+// AuthUsecase is abstract interface about usecase layer using in delivery layer
+type AuthUsecase interface {
+	SignUpParent(ctx gin.Context)
+}
