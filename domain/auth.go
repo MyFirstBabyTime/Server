@@ -1,5 +1,21 @@
 package domain
 
+import (
+	"context"
+	"database/sql"
+	"github.com/gin-gonic/gin"
+)
+
+// AuthMysqlSchema is sql to create tables about auth domain in MySQL
+const (
+	AuthMysqlSchema = `
+CREATE TABLE pet (
+	uuid VARCHAR(11),
+	id VARCHAR(20),
+	pw VARCHAR(100)
+);
+`
+)
 
 // ParentAuth is model represent parent auth using in auth domain
 type ParentAuth struct {
