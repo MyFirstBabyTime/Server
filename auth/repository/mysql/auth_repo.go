@@ -19,10 +19,10 @@ type mysqlAuthRepository struct {
 }
 
 // NewMysqlAuthRepository return implementation of domain.AuthRepository using mysql
-func NewMysqlAuthRepository(conn *sql.DB) domain.AuthRepository {
-	repo := &mysqlAuthRepository{conn}
-	if err := repo.migrateSchema(domain.AuthMysqlSchema); err != nil {
-		log.Fatal(errors.Wrap(err, "failed to migrate schema").Error())
+func NewMysqlAuthRepository(db *sqlx.DB) domain.AuthRepository {
+	repo := &mysqlAuthRepository{db}
+	if err := repo.migrateModel(domain.ParentAuth{}); err != nil {
+		log.Fatal(errors.Wrap(err, "failed to migrate parent auth model").Error())
 	}
 	return repo
 }
