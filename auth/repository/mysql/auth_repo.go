@@ -11,7 +11,7 @@ import (
 
 // mysqlAuthRepository is implementation of domain.AuthRepository using mysql
 type mysqlAuthRepository struct {
-	conn *sql.DB
+	db *sqlx.DB
 }
 
 // NewMysqlAuthRepository return implementation of domain.AuthRepository using mysql
@@ -24,13 +24,13 @@ func NewMysqlAuthRepository(conn *sql.DB) domain.AuthRepository {
 }
 
 // BeginTx is method of domain.AuthRepository interface
-func (ar *mysqlAuthRepository) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) { return ar.conn.BeginTx(ctx, opts) }
+func (ar *mysqlAuthRepository) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sqlx.Tx, error) { return ar.db.BeginTxx(ctx, opts) }
 
 // Commit is method of domain.AuthRepository interface
-func (ar *mysqlAuthRepository) Commit(tx *sql.Tx) error { return tx.Commit() }
+func (ar *mysqlAuthRepository) Commit(tx *sqlx.Tx) error { return tx.Commit() }
 
 // Rollback is method of domain.AuthRepository interface
-func (ar *mysqlAuthRepository) Rollback(tx *sql.Tx) error { return tx.Rollback() }
+func (ar *mysqlAuthRepository) Rollback(tx *sqlx.Tx) error { return tx.Rollback() }
 
 // migrate
 func (ar *mysqlAuthRepository) migrateSchema(schema string) (err error) {
