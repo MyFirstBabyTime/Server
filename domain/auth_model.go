@@ -11,12 +11,12 @@ type ParentAuth struct {
 	ProfileUri sql.NullString `db:"profile_uri"`
 }
 
-// TableName return table name about model
+// TableName return table name about ParentAuth model
 func (pa ParentAuth) TableName() string {
 	return "parent_auth"
 }
 
-// Schema return schema SQL about model
+// Schema return schema SQL about ParentAuth model
 func (pa ParentAuth) Schema() string {
 	return `CREATE TABLE parent_auth (
 		uuid        CHAR(11)  NOT NULL,
@@ -34,4 +34,22 @@ type ParentPhoneNumber struct {
 	PhoneNumber string `db:"phone_number" validate:"required"`
 	CertifyCode int    `db:"certify_code" validate:"required"`
 	Certified   bool   `db:"certified"`
+}
+
+// TableName return table name about ParentPhoneNumber model
+func (pn ParentPhoneNumber) TableName() string {
+	return "parent_phone_number"
+}
+
+// Schema return schema SQL about ParentPhoneNumber model
+func (pn ParentPhoneNumber) Schema() string {
+	return `CREATE TABLE parent_phone_number (
+		parent_uuid  CHAR(11) NOT NULL,
+		phone_number CHAR(11) NOT NULL,
+		certify_code INT(11)  NOT NULL,
+		certified    TINYINT  NOT NULL DEFAULT 0,
+		FOREIGN KEY (parent_uuid)
+        	REFERENCES parent_auth(uuid)
+        	ON DELETE CASCADE
+	);`
 }
