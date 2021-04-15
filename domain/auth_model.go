@@ -27,3 +27,11 @@ func (pa ParentAuth) Schema() string {
 		PRIMARY KEY (uuid)
 	);`
 }
+
+// ParentPhoneNumber is model represent parent phone number using in auth domain
+type ParentPhoneNumber struct {
+	ParentUUID  string `db:"parent_uuid" validate:"required"`
+	PhoneNumber string `db:"phone_number" validate:"required"`
+	CertifyCode int    `db:"certify_code" validate:"required"`
+	Certified   bool   `db:"certified"`
+}
