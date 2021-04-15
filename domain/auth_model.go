@@ -6,3 +6,17 @@ type ParentAuth struct {
 	ID   string `db:"id" validate:"required"`
 	PW   string `db:"pw" validate:"required"`
 }
+
+// TableName return table name about model
+func (pa ParentAuth) TableName() string {
+	return "parent_auth"
+}
+
+// Schema return schema SQL about model
+func (pa ParentAuth) Schema() string {
+	return `CREATE TABLE parent_auth (
+		uuid VARCHAR(11) NOT NULL,
+		id VARCHAR(20) NOT NULL,
+		pw VARCHAR(100) NOT NULL
+	);`
+}
