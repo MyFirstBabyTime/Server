@@ -1,8 +1,6 @@
 package mysql
 
 import (
-	"context"
-	"database/sql"
 	"github.com/Masterminds/squirrel"
 	"github.com/VividCortex/mysqlerr"
 	"github.com/go-sql-driver/mysql"
@@ -11,6 +9,7 @@ import (
 	"log"
 
 	"github.com/MyFirstBabyTime/Server/domain"
+	"github.com/MyFirstBabyTime/Server/tx"
 )
 
 // mysqlAuthRepository is implementation of domain.AuthRepository using mysql
@@ -19,27 +18,23 @@ type mysqlAuthRepository struct {
 }
 
 // NewMysqlAuthRepository return implementation of domain.AuthRepository using mysql
-func NewMysqlAuthRepository(db *sqlx.DB) domain.AuthRepository {
+func NewMysqlAuthRepository(db *sqlx.DB) domain.ParentAuthRepository {
 	repo := &mysqlAuthRepository{db}
 
 	if err := repo.migrateModel(domain.ParentAuth{}); err != nil {
 		log.Fatal(errors.Wrap(err, "failed to migrate parent auth model").Error())
 	}
 
-	if err := repo.migrateModel(domain.ParentPhoneNumber{}); err != nil {
-		log.Fatal(errors.Wrap(err, "failed to migrate parent phone number model").Error())
+	if err := repo.migrateModel(domain.ParentPhoneCertify{}); err != nil {
+		log.Fatal(errors.Wrap(err, "failed to migrate parent phone number certify").Error())
 	}
 	return repo
 }
 
-// BeginTx is method of domain.AuthRepository interface
-func (ar *mysqlAuthRepository) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sqlx.Tx, error) { return ar.db.BeginTxx(ctx, opts) }
-
-// Commit is method of domain.AuthRepository interface
-func (ar *mysqlAuthRepository) Commit(tx *sqlx.Tx) error { return tx.Commit() }
-
-// Rollback is method of domain.AuthRepository interface
-func (ar *mysqlAuthRepository) Rollback(tx *sqlx.Tx) error { return tx.Rollback() }
+// Store is implement domain.AuthRepository interface
+func (ar *mysqlAuthRepository) Store(ctx tx.Context, pa *domain.ParentAuth) (err error) {
+	return
+}
 
 // migrateModel method migrate model received from parameter to this repository
 func (ar *mysqlAuthRepository) migrateModel(model interface {
