@@ -89,14 +89,19 @@ func (ar *parentAuthRepository) Store(ctx tx.Context, pa *domain.ParentAuth) (er
 }
 
 // getAvailableUUID method return available uuid of parent auth table
-func (ar *parentAuthRepository) getAvailableUUID(ctx tx.Context) (uuid string) {
+func (ar *parentAuthRepository) getAvailableUUID(ctx tx.Context) (string, error) {
 	auth := new(domain.ParentAuth)
 
 	for {
 		auth.SetRandomUUID()
 		_, err := ar.GetByUUID(ctx, auth.UUID)
-		if isRowNotExist(err) {
-			return auth.UUID
+
+		if err == nil {
+			continue
+		} else if ok, _ := isRowNotExist(err); ok {
+			return auth.UUID, nil
+		} else {
+			return "", errors.Wrap(err, "failed to GetByUUID")
 		}
 	}
 }
