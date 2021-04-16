@@ -1,6 +1,10 @@
 package domain
 
-import "database/sql"
+import (
+	"database/sql"
+	"fmt"
+	"math/rand"
+)
 
 // ParentAuth is model represent parent auth using in auth domain
 type ParentAuth struct {
@@ -26,6 +30,16 @@ func (pa ParentAuth) Schema() string {
 		profile_uri VARCHAR(100),
 		PRIMARY KEY (uuid)
 	);`
+}
+
+// SetRandomUUID method set UUID field to random value
+func (pa *ParentAuth) SetRandomUUID() {
+	intLetters := []rune("0123456789")
+	randomRuneArr := make([]rune, 10)
+	for i := range randomRuneArr {
+		randomRuneArr[i] = intLetters[rand.Intn(len(intLetters))]
+	}
+	pa.UUID = fmt.Sprintf("p%s", string(randomRuneArr))
 }
 
 // ParentPhoneCertify is model represent parent phone number using in auth domain
