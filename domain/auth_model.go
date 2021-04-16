@@ -28,8 +28,8 @@ func (pa ParentAuth) Schema() string {
 	);`
 }
 
-// ParentPhoneNumber is model represent parent phone number using in auth domain
-type ParentPhoneNumber struct {
+// ParentPhoneCertify is model represent parent phone number using in auth domain
+type ParentPhoneCertify struct {
 	ParentUUID  string `db:"parent_uuid" validate:"required"`
 	PhoneNumber string `db:"phone_number" validate:"required"`
 	CertifyCode int    `db:"certify_code" validate:"required"`
@@ -37,13 +37,13 @@ type ParentPhoneNumber struct {
 }
 
 // TableName return table name about ParentPhoneNumber model
-func (pn ParentPhoneNumber) TableName() string {
-	return "parent_phone_number"
+func (pn ParentPhoneCertify) TableName() string {
+	return "parent_phone_certify"
 }
 
 // Schema return schema SQL about ParentPhoneNumber model
-func (pn ParentPhoneNumber) Schema() string {
-	return `CREATE TABLE parent_phone_number (
+func (pn ParentPhoneCertify) Schema() string {
+	return `CREATE TABLE parent_phone_certify (
 		parent_uuid  CHAR(11) NOT NULL,
 		phone_number CHAR(11) NOT NULL,
 		certify_code INT(11)  NOT NULL,
