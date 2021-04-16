@@ -5,12 +5,21 @@ type rowNotExistErr struct {
 	error
 }
 func (err rowNotExistErr) Error() string { return err.error.Error() }
-func (err rowNotExistErr) RowNotExist() bool { return true }
+func (err rowNotExistErr) IsRowNotExist() bool { return true }
 
-// isRowNotExist method return if err is row not exist
+// entryDuplicateErr is error type & used for row not exist error
+type entryDuplicateErr struct {
+	error
+	duplicateEntry string
+}
+func (err entryDuplicateErr) Error() string { return err.error.Error() }
+func (err entryDuplicateErr) IsEntryDuplicate() bool { return true }
+func (err entryDuplicateErr) DuplicateEntry() string { return err.duplicateEntry }
+
+// isRowNotExist method return if err is about row not exist
 func isRowNotExist(err error) bool {
 	type rowNotExist interface {
-		RowNotExist() bool
+		IsRowNotExist() bool
 	}
 
 	re, ok := err.(rowNotExistErr)
