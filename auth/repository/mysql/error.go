@@ -7,32 +7,30 @@ type rowNotExistErr struct {
 func (err rowNotExistErr) Error() string { return err.error.Error() }
 func (err rowNotExistErr) IsRowNotExist() bool { return true }
 
+// rowNotExist interface & isRowNotExist method is used for check & get error context
+type rowNotExist interface {
+	IsRowNotExist() bool
+}
+func isRowNotExist(err error) (bool, rowNotExist) {
+	re, ok := err.(rowNotExistErr)
+	return ok && re.IsRowNotExist(), re
+}
+
 // entryDuplicateErr is error type & used for row not exist error
 type entryDuplicateErr struct {
 	error
-	duplicateEntry string
+	duplicateKey string
 }
 func (err entryDuplicateErr) Error() string { return err.error.Error() }
 func (err entryDuplicateErr) IsEntryDuplicate() bool { return true }
-func (err entryDuplicateErr) DuplicateEntry() string { return err.duplicateEntry }
+func (err entryDuplicateErr) DuplicateKey() string { return err.duplicateKey }
 
-// isRowNotExist method return if err is about row not exist
-func isRowNotExist(err error) bool {
-	type rowNotExist interface {
-		IsRowNotExist() bool
-	}
-
-	re, ok := err.(rowNotExistErr)
-	return ok && re.IsRowNotExist()
+// entryDuplicate interface & isEntryDuplicate method is used for check & get error context
+type entryDuplicate interface {
+	IsEntryDuplicate() bool
+	DuplicateKey() string
 }
-
-// isEntryDuplicate method return if err is about entry duplicate
-func isEntryDuplicate(err error) (bool, string) {
-	type entryDuplicate interface {
-		IsEntryDuplicate() bool
-		DuplicateEntry() string
-	}
-
-	re, ok := err.(entryDuplicate)
-	return ok && re.IsEntryDuplicate(), re.DuplicateEntry()
+func isEntryDuplicate(err error) (bool, entryDuplicate) {
+	ee, ok := err.(entryDuplicate)
+	return ok && ee.IsEntryDuplicate(), ee
 }
