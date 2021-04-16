@@ -2,7 +2,7 @@ package domain
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
+	"github.com/MyFirstBabyTime/Server/tx"
 )
 
 // AuthUsecase is abstract interface about usecase layer using in delivery layer
@@ -26,13 +26,14 @@ type AuthUsecase interface {
 	//Rollback(tx *sqlx.Tx) (err error)                          // Rollback method rollback transaction
 //}
 
-// ParentAuthRepository is interface only about ParentAuth model
+// ParentAuthRepository is repository interface about ParentAuth model
 type ParentAuthRepository interface {
-	Store(ctx context.Context, pa *ParentAuth) error
+	Store(ctx tx.Context, pa *ParentAuth) error
 }
 
+// ParentPhoneNumberRepository is repository interface about ParentPhoneCertify model
 type ParentPhoneNumberRepository interface {
-	GetByPhoneNumber(ctx context.Context, pn string) (ParentPhoneCertify, error)
-	Store(ctx context.Context, ppc *ParentPhoneCertify) error
-	Update(ctx context.Context, ppc *ParentPhoneCertify)
+	GetByPhoneNumber(ctx tx.Context, pn string) (ParentPhoneCertify, error)
+	Store(ctx tx.Context, ppc *ParentPhoneCertify) error
+	Update(ctx tx.Context, ppc *ParentPhoneCertify)
 }
