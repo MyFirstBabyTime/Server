@@ -26,8 +26,11 @@ type sqlMsgParser interface{
 }
 
 // ParentAuthRepository return implementation of domain.ParentAuthRepository using mysql
-func ParentAuthRepository(db *sqlx.DB) domain.ParentAuthRepository {
-	repo := &parentAuthRepository{db: db}
+func ParentAuthRepository(db *sqlx.DB, sp sqlMsgParser) domain.ParentAuthRepository {
+	repo := &parentAuthRepository{
+		db:           db,
+		sqlMsgParser: sp,
+	}
 	if err := repo.migrator.MigrateModel(repo.db, domain.ParentAuth{}); err != nil {
 		log.Fatal(errors.Wrap(err, "failed to migrate parent auth model").Error())
 	}
