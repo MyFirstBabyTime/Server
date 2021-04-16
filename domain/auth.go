@@ -2,13 +2,18 @@ package domain
 
 import (
 	"context"
-	"database/sql"
 	"github.com/gin-gonic/gin"
-	"github.com/jmoiron/sqlx"
 )
 
 // AuthUsecase is abstract interface about usecase layer using in delivery layer
 type AuthUsecase interface {
+	// SendPhoneNumberCertifyCode method send phone number certify code
+	SendPhoneNumberCertifyCode(ctx gin.Context)
+
+	// CertifyPhoneNumber method certify phone number with certify code
+	CertifyPhoneNumber(ctx gin.Context)
+
+	// SignUpParent method create new parent auth with parent phone number
 	SignUpParent(ctx gin.Context)
 }
 
