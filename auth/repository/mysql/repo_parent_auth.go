@@ -35,11 +35,15 @@ func ParentAuthRepository(db *sqlx.DB) domain.ParentAuthRepository {
 }
 
 // GetByUUID is implement domain.AuthRepository interface
-func (ar *parentAuthRepository) GetByUUID(ctx tx.Context, uuid string) (auth domain.ParentAuth, err error) {
+func (ar *parentAuthRepository) GetByUUID(ctx tx.Context, uuid string) (auth struct {
+	domain.ParentAuth
+	domain.ParentPhoneCertify
+}, err error) {
 	_tx, _ := ctx.Tx().(*sqlx.Tx)
 	_sql, args, _ := squirrel.Select("*").
-		From(domain.ParentAuth{}.TableName()).
-		Where("uuid = ?", uuid).ToSql()
+		From("parent_auth, parent_phone_certify").
+		Where("parent_auth.uuid = parent_phone_certify.parent_uuid").
+		Where("parent_auth.uuid = ?", uuid).ToSql()
 
 	switch err = _tx.Get(&auth, _sql, args...); err {
 	case nil:
