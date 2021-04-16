@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"math/rand"
+	"time"
 )
 
 // ParentAuth is model represent parent auth using in auth domain
@@ -34,6 +35,7 @@ func (pa ParentAuth) Schema() string {
 
 // SetRandomUUID method set UUID field to random value
 func (pa *ParentAuth) SetRandomUUID() {
+	rand.Seed(time.Now().UnixNano())
 	intLetters := []rune("0123456789")
 	randomRuneArr := make([]rune, 10)
 	for i := range randomRuneArr {
@@ -44,10 +46,10 @@ func (pa *ParentAuth) SetRandomUUID() {
 
 // ParentPhoneCertify is model represent parent phone number using in auth domain
 type ParentPhoneCertify struct {
-	ParentUUID  string `db:"parent_uuid"`
-	PhoneNumber string `db:"phone_number" validate:"required"`
-	CertifyCode int    `db:"certify_code" validate:"required"`
-	Certified   bool   `db:"certified"`
+	ParentUUID  sql.NullString `db:"parent_uuid"`
+	PhoneNumber string         `db:"phone_number" validate:"required"`
+	CertifyCode int            `db:"certify_code" validate:"required"`
+	Certified   bool           `db:"certified"`
 }
 
 // TableName return table name about ParentPhoneNumber model
