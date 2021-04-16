@@ -54,7 +54,7 @@ func (ar *parentAuthRepository) GetByUUID(ctx tx.Context, uuid string) (auth str
 	case sql.ErrNoRows:
 		err = rowNotExistErr{errors.Wrap(err, "failed to select parent auth")}
 	default:
-		err = errors.Wrap(err, "select parent auth return unexpected error var")
+		err = errors.Wrap(err, "select parent auth return unexpected error")
 	}
 	return
 }
