@@ -16,8 +16,8 @@ func (m migrator) MigrateModel(db *sqlx.DB ,model interface {
 	TableName() string // TableName return table name about model
 	Schema() string    // Schema return schema SQL about model
 }) (err error) {
-	_sql, _, _ := squirrel.Select("*").From(model.TableName()).ToSql()
-	switch _, err = db.Query(_sql); tErr := err.(type) {
+	sql, _, _ := squirrel.Select("*").From(model.TableName()).ToSql()
+	switch _, err = db.Query(sql); tErr := err.(type) {
 	case nil:
 		break
 	case *mysql.MySQLError:
