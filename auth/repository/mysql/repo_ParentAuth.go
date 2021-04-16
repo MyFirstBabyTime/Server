@@ -13,7 +13,7 @@ import (
 	"github.com/MyFirstBabyTime/Server/tx"
 )
 
-// mysqlAuthRepository is implementation of domain.AuthRepository using mysql
+// parentAuthRepository is implementation of domain.AuthRepository using mysql
 type parentAuthRepository struct {
 	db           *sqlx.DB
 	migrator     migrator
