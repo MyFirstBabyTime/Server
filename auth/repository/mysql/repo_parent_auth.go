@@ -1,6 +1,10 @@
 package mysql
 
 import (
+	"database/sql"
+	"github.com/Masterminds/squirrel"
+	"github.com/VividCortex/mysqlerr"
+	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"log"
@@ -43,13 +47,40 @@ func (ar *parentAuthRepository) GetByUUID(ctx tx.Context, uuid string) (auth dom
 	case sql.ErrNoRows:
 		err = rowNotExistErr{errors.Wrap(err, "failed to select parent auth")}
 	default:
-		err = errors.Wrap(err, "unexpected failed to select parent auth")
+		err = errors.Wrap(err, "select parent auth return unexpected error var")
 	}
 	return
 }
+
+// GetByID is implement domain.AuthRepository interface
+func (ar *parentAuthRepository) GetByID(ctx tx.Context, id string) (auth domain.ParentAuth, err error) {
 	return
+}
+
 // Store is implement domain.AuthRepository interface
 func (ar *parentAuthRepository) Store(ctx tx.Context, pa *domain.ParentAuth) (err error) {
+	if pa.UUID == "" {
+		pa.UUID = ar.getAvailableUUID(ctx)
+	}
+
+	_tx, _ := ctx.Tx().(*sqlx.Tx)
+	_sql, args, _ := squirrel.Insert(pa.TableName()).Columns("uuid", "id", "pw", "name", "profile_uri").
+		Values(pa.UUID, pa.ID, pa.PW, pa.Name, pa.ProfileUri).ToSql()
+	
+	switch _, err = _tx.Exec(_sql, args...); tErr := err.(type) {
+	case nil:
+		break
+	case *mysql.MySQLError:
+		switch tErr.Number {
+		case mysqlerr.ER_DUP_ENTRY:
+			err = errors.Wrap(err, "failed to insert parent auth")
+			err = entryDuplicateErr{err, ar.sqlMsgParser.EntryDuplicate(tErr.Message)}
+		default:
+			err = errors.Wrap(err, "insert parent auth return unexpected code return")
+		}
+	default:
+		err = errors.Wrap(err, "insert parent auth return unexpected error type")
+	}
 	return
 }
 
