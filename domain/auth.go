@@ -28,6 +28,8 @@ type AuthUsecase interface {
 
 // ParentAuthRepository is repository interface about ParentAuth model
 type ParentAuthRepository interface {
+	GetByUUID(ctx tx.Context, uuid string) (ParentAuth, error)
+	GetByID(ctx tx.Context, id string) (ParentAuth, error)
 	Store(ctx tx.Context, pa *ParentAuth) error
 }
 
