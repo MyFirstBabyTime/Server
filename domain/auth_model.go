@@ -30,7 +30,7 @@ func (pa ParentAuth) Schema() string {
 
 // ParentPhoneCertify is model represent parent phone number using in auth domain
 type ParentPhoneCertify struct {
-	ParentUUID  string `db:"parent_uuid" validate:"required"`
+	ParentUUID  string `db:"parent_uuid"`
 	PhoneNumber string `db:"phone_number" validate:"required"`
 	CertifyCode int    `db:"certify_code" validate:"required"`
 	Certified   bool   `db:"certified"`
@@ -44,10 +44,11 @@ func (pn ParentPhoneCertify) TableName() string {
 // Schema return schema SQL about ParentPhoneNumber model
 func (pn ParentPhoneCertify) Schema() string {
 	return `CREATE TABLE parent_phone_certify (
-		parent_uuid  CHAR(11) NOT NULL,
+		parent_uuid  CHAR(11),
 		phone_number CHAR(11) NOT NULL,
 		certify_code INT(11)  NOT NULL,
 		certified    TINYINT  NOT NULL DEFAULT 0,
+		PRIMARY KEY (phone_number),
 		FOREIGN KEY (parent_uuid)
         	REFERENCES parent_auth(uuid)
         	ON DELETE CASCADE
