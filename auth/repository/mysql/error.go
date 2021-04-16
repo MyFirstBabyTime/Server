@@ -23,5 +23,16 @@ func isRowNotExist(err error) bool {
 	}
 
 	re, ok := err.(rowNotExistErr)
-	return ok && re.RowNotExist()
+	return ok && re.IsRowNotExist()
+}
+
+// isEntryDuplicate method return if err is about entry duplicate
+func isEntryDuplicate(err error) (bool, string) {
+	type entryDuplicate interface {
+		IsEntryDuplicate() bool
+		DuplicateEntry() string
+	}
+
+	re, ok := err.(entryDuplicate)
+	return ok && re.IsEntryDuplicate(), re.DuplicateEntry()
 }
