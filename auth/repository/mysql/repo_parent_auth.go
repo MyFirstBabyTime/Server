@@ -24,6 +24,24 @@ func ParentAuthRepository(db *sqlx.DB) domain.ParentAuthRepository {
 	return repo
 }
 
+// GetByUUID is implement domain.AuthRepository interface
+func (ar *parentAuthRepository) GetByUUID(ctx tx.Context, uuid string) (auth domain.ParentAuth, err error) {
+	_tx, _ := ctx.Tx().(*sqlx.Tx)
+	_sql, args, _ := squirrel.Select("*").
+		From(domain.ParentAuth{}.TableName()).
+		Where("uuid = ?", uuid).ToSql()
+
+	switch err = _tx.Get(&auth, _sql, args...); err {
+	case nil:
+		break
+	case sql.ErrNoRows:
+		err = rowNotExistErr{errors.Wrap(err, "failed to select parent auth")}
+	default:
+		err = errors.Wrap(err, "unexpected failed to select parent auth")
+	}
+	return
+}
+	return
 // Store is implement domain.AuthRepository interface
 func (ar *parentAuthRepository) Store(ctx tx.Context, pa *domain.ParentAuth) (err error) {
 	return
