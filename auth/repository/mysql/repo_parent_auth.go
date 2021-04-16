@@ -67,7 +67,10 @@ func (ar *parentAuthRepository) GetByID(ctx tx.Context, id string) (auth domain.
 // Store is implement domain.AuthRepository interface
 func (ar *parentAuthRepository) Store(ctx tx.Context, pa *domain.ParentAuth) (err error) {
 	if pa.UUID == "" {
-		pa.UUID = ar.getAvailableUUID(ctx)
+		if pa.UUID, err = ar.getAvailableUUID(ctx); err != nil {
+			err = errors.Wrap(err, "failed to getAvailableUUID")
+			return
+		}
 	}
 
 	_tx, _ := ctx.Tx().(*sqlx.Tx)
@@ -81,7 +84,8 @@ func (ar *parentAuthRepository) Store(ctx tx.Context, pa *domain.ParentAuth) (er
 		switch tErr.Number {
 		case mysqlerr.ER_DUP_ENTRY:
 			err = errors.Wrap(err, "failed to insert parent auth")
-			err = entryDuplicateErr{err, ar.sqlMsgParser.EntryDuplicate(tErr.Message)}
+			_, key := ar.sqlMsgParser.EntryDuplicate(tErr.Message)
+			err = entryDuplicateErr{err, key}
 		default:
 			err = errors.Wrap(err, "insert parent auth return unexpected code return")
 		}
