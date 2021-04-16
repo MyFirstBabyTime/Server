@@ -8,3 +8,15 @@ type Context interface {
 	Tx() (tx interface{})
 	SetTx(tx interface{})
 }
+
+// txContext is implementation of Context interface
+type txContext struct {
+	context.Context
+	txKey interface{}
+}
+
+// Tx method Get TX value from context
+func (tc *txContext) Tx() (tx interface{}) { return tc.Value(tc.txKey) }
+
+// SetTx method Set TX value in context
+func (tc *txContext) SetTx(tx interface{}) { tc.Context = context.WithValue(tc.Context, tc.txKey, tx) }
