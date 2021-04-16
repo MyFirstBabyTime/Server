@@ -11,8 +11,9 @@ import (
 
 // mysqlAuthRepository is implementation of domain.AuthRepository using mysql
 type parentAuthRepository struct {
-	migrator migrator
-	db *sqlx.DB
+	db           *sqlx.DB
+	migrator     migrator
+	sqlMsgParser sqlMsgParser
 }
 
 // sqlMsgParser is interface used for parse sql result message
