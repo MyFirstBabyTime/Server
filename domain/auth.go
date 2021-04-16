@@ -26,6 +26,8 @@ type ParentAuthRepository interface {
 	Store(ctx context.Context, pa *ParentAuth) error
 }
 
-type parentAuthRepository interface {
-	CreateParentAuth(tx *sqlx.Tx, auth *ParentAuth) error
+type ParentPhoneNumberRepository interface {
+	GetByPhoneNumber(ctx context.Context, pn string) (ParentPhoneCertify, error)
+	Store(ctx context.Context, ppc *ParentPhoneCertify) error
+	Update(ctx context.Context, ppc *ParentPhoneCertify)
 }
