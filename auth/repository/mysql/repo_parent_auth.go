@@ -40,9 +40,9 @@ func (ar *parentAuthRepository) GetByUUID(ctx tx.Context, uuid string) (auth str
 	domain.ParentPhoneCertify
 }, err error) {
 	_tx, _ := ctx.Tx().(*sqlx.Tx)
-	_sql, args, _ := squirrel.Select("*").
-		From("parent_auth, parent_phone_certify").
-		Where("parent_auth.uuid = parent_phone_certify.parent_uuid").
+	_sql, args, _ := squirrel.Select("parent_auth.*, IF(phone_number IS NULL, '', phone_number) AS phone_number").
+		From("parent_auth").
+		LeftJoin("parent_phone_certify ON parent_auth.uuid = parent_phone_certify.parent_uuid").
 		Where("parent_auth.uuid = ?", uuid).ToSql()
 
 	switch err = _tx.Get(&auth, _sql, args...); err {
