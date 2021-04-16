@@ -60,7 +60,23 @@ func (ar *parentAuthRepository) GetByUUID(ctx tx.Context, uuid string) (auth str
 }
 
 // GetByID is implement domain.AuthRepository interface
-func (ar *parentAuthRepository) GetByID(ctx tx.Context, id string) (auth domain.ParentAuth, err error) {
+func (ar *parentAuthRepository) GetByID(ctx tx.Context, id string) (auth struct {
+	domain.ParentAuth
+	domain.ParentPhoneCertify
+}, err error) {_tx, _ := ctx.Tx().(*sqlx.Tx)
+	_sql, args, _ := squirrel.Select("parent_auth.*, IF(phone_number IS NULL, '', phone_number) AS phone_number").
+		From("parent_auth").
+		LeftJoin("parent_phone_certify ON parent_auth.uuid = parent_phone_certify.parent_uuid").
+		Where("parent_auth.id = ?", id).ToSql()
+
+	switch err = _tx.Get(&auth, _sql, args...); err {
+	case nil:
+		break
+	case sql.ErrNoRows:
+		err = rowNotExistErr{errors.Wrap(err, "failed to select parent auth")}
+	default:
+		err = errors.Wrap(err, "select parent auth return unexpected error var")
+	}
 	return
 }
 
