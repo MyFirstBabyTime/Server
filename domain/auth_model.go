@@ -24,7 +24,7 @@ func (pa ParentAuth) TableName() string {
 func (pa ParentAuth) Schema() string {
 	return `CREATE TABLE parent_auth (
 		uuid        CHAR(11)  NOT NULL,
-		id          VARCHAR(20)  NOT NULL,
+		id          VARCHAR(20)  NOT NULL UNIQUE,
 		pw          VARCHAR(100) NOT NULL,
 		name        VARCHAR(10)  NOT NULL,
 		profile_uri VARCHAR(100),
