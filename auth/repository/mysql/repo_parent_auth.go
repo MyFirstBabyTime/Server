@@ -15,6 +15,11 @@ type parentAuthRepository struct {
 	db *sqlx.DB
 }
 
+// sqlMsgParser is interface used for parse sql result message
+type sqlMsgParser interface{
+	EntryDuplicate(msg string) (entry string)
+}
+
 // ParentAuthRepository return implementation of domain.ParentAuthRepository using mysql
 func ParentAuthRepository(db *sqlx.DB) domain.ParentAuthRepository {
 	repo := &parentAuthRepository{db: db}
