@@ -28,3 +28,16 @@ func ParentAuthRepository(db *sqlx.DB) domain.ParentAuthRepository {
 func (ar *parentAuthRepository) Store(ctx tx.Context, pa *domain.ParentAuth) (err error) {
 	return
 }
+
+// getAvailableUUID method return available uuid of parent auth table
+func (ar *parentAuthRepository) getAvailableUUID(ctx tx.Context) (uuid string) {
+	auth := new(domain.ParentAuth)
+
+	for {
+		auth.SetRandomUUID()
+		_, err := ar.GetByUUID(ctx, auth.UUID)
+		if isRowNotExist(err) {
+			return auth.UUID
+		}
+	}
+}
