@@ -8,13 +8,13 @@ import (
 // AuthUsecase is abstract interface about usecase layer using in delivery layer
 type AuthUsecase interface {
 	// SendPhoneNumberCertifyCode method send phone number certify code
-	SendPhoneNumberCertifyCode(ctx gin.Context)
+	SendPhoneNumberCertifyCode(ctx context.Context)
 
 	// CertifyPhoneNumber method certify phone number with certify code
-	CertifyPhoneNumber(ctx gin.Context)
+	CertifyPhoneNumber(ctx context.Context)
 
 	// SignUpParent method create new parent auth with parent phone number
-	SignUpParent(ctx gin.Context)
+	SignUpParent(ctx context.Context)
 }
 
 // AuthRepository is abstract interface about repository layer using in usecase layer
