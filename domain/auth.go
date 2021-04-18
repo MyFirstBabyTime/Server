@@ -11,9 +11,9 @@ type AuthUsecase interface {
 	SendCertifyCodeToPhone(ctx context.Context, pn string) error
 
 	// CertifyPhoneWithCode method certify phone with certify code
-	CertifyPhoneWithCode(ctx context.Context, pn string, code int) error
+	CertifyPhoneWithCode(ctx context.Context, pn string, code int64) error
 
-	// SignUpParent method create new parent auth with ParentAuthparent phone number
+	// SignUpParent method create new parent auth with ParentAuth & parent phone number
 	SignUpParent(ctx context.Context, pa *ParentAuth, pn string) error
 
 	// LoginParentAuth method login parent auth & return logged ParentAuth model, token
