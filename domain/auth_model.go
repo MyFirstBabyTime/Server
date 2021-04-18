@@ -50,7 +50,7 @@ type ParentPhoneCertify struct {
 	ParentUUID  sql.NullString `db:"parent_uuid" validate:"uuid=parent"`
 	PhoneNumber string         `db:"phone_number" validate:"required,len=11"`
 	CertifyCode int            `db:"certify_code" validate:"required,range=100000~999999"`
-	Certified   bool           `db:"certified"`
+	Certified   sql.NullBool   `db:"certified"`
 }
 
 // TableName return table name about ParentPhoneNumber model
