@@ -39,8 +39,8 @@ type ParentAuthRepository interface {
 	Store(ctx tx.Context, pa *ParentAuth) error
 }
 
-// ParentPhoneNumberRepository is repository interface about ParentPhoneCertify model
-type ParentPhoneNumberRepository interface {
+// ParentPhoneCertifyRepository is repository interface about ParentPhoneCertify model
+type ParentPhoneCertifyRepository interface {
 	GetByPhoneNumber(ctx tx.Context, pn string) (ParentPhoneCertify, error)
 	Store(ctx tx.Context, ppc *ParentPhoneCertify) error
 	Update(ctx tx.Context, ppc *ParentPhoneCertify)
