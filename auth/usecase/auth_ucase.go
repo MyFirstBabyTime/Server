@@ -19,8 +19,17 @@ type authUsecase struct {
 }
 
 // AuthUsecase return implementation of domain.AuthUsecase
-func AuthUsecase() domain.AuthUsecase {
-	return &authUsecase{}
+func AuthUsecase(
+	par domain.ParentAuthRepository,
+	ppr domain.ParentPhoneCertifyRepository,
+	th TxHandler,
+) domain.AuthUsecase {
+	return &authUsecase{
+		parentAuthRepository:         par,
+		parentPhoneCertifyRepository: ppr,
+		txHandler:                    th,
+}
+}
 
 // TxHandler is used for handling transaction to begin & commit or rollback
 type TxHandler interface {
