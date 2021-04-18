@@ -43,5 +43,5 @@ type ParentAuthRepository interface {
 type ParentPhoneCertifyRepository interface {
 	GetByPhoneNumber(ctx tx.Context, pn string) (ParentPhoneCertify, error)
 	Store(ctx tx.Context, ppc *ParentPhoneCertify) error
-	Update(ctx tx.Context, ppc *ParentPhoneCertify)
+	Update(ctx tx.Context, ppc *ParentPhoneCertify) error
 }
