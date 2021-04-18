@@ -83,3 +83,16 @@ func (pn *ParentPhoneCertify) GenerateCertifyCode() int {
 	v, _ := strconv.Atoi(string(random))
 	return v
 }
+
+// GenerateValidModel method return model referenced by value with set valid value
+func (pn ParentPhoneCertify) GenerateValidModel() ParentPhoneCertify {
+	var (
+		validCertifyCode = 123456
+	)
+
+	if pn.CertifyCode == 0 {
+		pn.CertifyCode = validCertifyCode
+	}
+
+	return pn
+}
