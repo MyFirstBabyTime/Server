@@ -6,6 +6,7 @@ type conflictErr struct {
 	code int
 }
 func (_ conflictErr) Conflict() {}
+func (err conflictErr) Status() int { return http.StatusConflict }
 func (err conflictErr) Code() int { return err.code }
 
 // internalServerErr is error type & used for internal server status
@@ -13,3 +14,4 @@ type internalServerErr struct {
 	error
 }
 func (_ internalServerErr) InternalServer() {}
+func (err internalServerErr) Status() int { return http.StatusInternalServerError }
