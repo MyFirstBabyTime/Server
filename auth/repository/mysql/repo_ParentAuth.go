@@ -26,6 +26,11 @@ type sqlMsgParser interface {
 	NoReferencedRow(msg string) (fk string)
 }
 
+// validator is interface used for validating struct value
+type validator interface {
+	ValidateStruct(s interface{}) (err error)
+}
+
 // ParentAuthRepository return implementation of domain.ParentAuthRepository using mysql
 func ParentAuthRepository(db *sqlx.DB, sp sqlMsgParser) domain.ParentAuthRepository {
 	repo := &parentAuthRepository{
