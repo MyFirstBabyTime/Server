@@ -10,10 +10,10 @@ import (
 
 // ParentAuth is model represent parent auth using in auth domain
 type ParentAuth struct {
-	UUID       string         `db:"uuid" validate:"required"`
-	ID         string         `db:"id" validate:"required"`
+	UUID       string         `db:"uuid" validate:"required,uuid=parent"`
+	ID         string         `db:"id" validate:"required,min=4,max=20"`
 	PW         string         `db:"pw" validate:"required"`
-	Name       string         `db:"name" validate:"required"`
+	Name       string         `db:"name" validate:"required,max=20"`
 	ProfileUri sql.NullString `db:"profile_uri"`
 }
 
@@ -47,9 +47,9 @@ func (pa ParentAuth) GenerateRandomUUID() string {
 
 // ParentPhoneCertify is model represent parent phone number using in auth domain
 type ParentPhoneCertify struct {
-	ParentUUID  sql.NullString `db:"parent_uuid"`
-	PhoneNumber string         `db:"phone_number" validate:"required"`
-	CertifyCode int            `db:"certify_code" validate:"required"`
+	ParentUUID  sql.NullString `db:"parent_uuid" validate:"uuid=parent"`
+	PhoneNumber string         `db:"phone_number" validate:"required,len=11"`
+	CertifyCode int            `db:"certify_code" validate:"required,range=100000~999999"`
 	Certified   bool           `db:"certified"`
 }
 
