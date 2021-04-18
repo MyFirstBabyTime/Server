@@ -33,15 +33,15 @@ func (pa ParentAuth) Schema() string {
 	);`
 }
 
-// SetRandomUUID method set UUID field to random value
-func (pa *ParentAuth) SetRandomUUID() {
+// GenerateRandomUUID method return random UUID value
+func (pa ParentAuth) GenerateRandomUUID() string {
 	rand.Seed(time.Now().UnixNano())
-	intLetters := []rune("0123456789")
-	randomRuneArr := make([]rune, 10)
-	for i := range randomRuneArr {
-		randomRuneArr[i] = intLetters[rand.Intn(len(intLetters))]
+	is := []rune("0123456789")
+	random := make([]rune, 10)
+	for i := range random {
+		random[i] = is[rand.Intn(len(is))]
 	}
-	pa.UUID = fmt.Sprintf("p%s", string(randomRuneArr))
+	return fmt.Sprintf("p%s", string(random))
 }
 
 // ParentPhoneCertify is model represent parent phone number using in auth domain
