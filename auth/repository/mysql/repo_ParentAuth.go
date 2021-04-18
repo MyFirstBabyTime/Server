@@ -46,7 +46,7 @@ func ParentAuthRepository(db *sqlx.DB, sp sqlMsgParser, v validator) domain.Pare
 	return repo
 }
 
-// GetByUUID is implement domain.AuthRepository interface
+// GetByUUID is implement domain.ParentAuthRepository interface
 func (ar *parentAuthRepository) GetByUUID(ctx tx.Context, uuid string) (auth struct {
 	domain.ParentAuth
 	domain.ParentPhoneCertify
@@ -68,7 +68,7 @@ func (ar *parentAuthRepository) GetByUUID(ctx tx.Context, uuid string) (auth str
 	return
 }
 
-// GetByID is implement domain.AuthRepository interface
+// GetByID is implement domain.ParentAuthRepository interface
 func (ar *parentAuthRepository) GetByID(ctx tx.Context, id string) (auth struct {
 	domain.ParentAuth
 	domain.ParentPhoneCertify
@@ -90,7 +90,7 @@ func (ar *parentAuthRepository) GetByID(ctx tx.Context, id string) (auth struct 
 	return
 }
 
-// Store is implement domain.AuthRepository interface
+// Store is implement domain.ParentAuthRepository interface
 func (ar *parentAuthRepository) Store(ctx tx.Context, pa *domain.ParentAuth) (err error) {
 	if pa.UUID == "" {
 		if pa.UUID, err = ar.getAvailableUUID(ctx); err != nil {
@@ -137,7 +137,7 @@ func (ar *parentAuthRepository) getAvailableUUID(ctx tx.Context) (string, error)
 
 		if err == nil {
 			continue
-		} else if ok, _ := isRowNotExist(err); ok {
+		} else if _, ok := err.(rowNotExistErr); ok {
 			return uuid, nil
 		} else {
 			return "", errors.Wrap(err, "failed to GetByUUID")
