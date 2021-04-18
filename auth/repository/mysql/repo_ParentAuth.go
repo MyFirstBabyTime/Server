@@ -91,7 +91,8 @@ func (ar *parentAuthRepository) Store(ctx tx.Context, pa *domain.ParentAuth) (er
 	}
 
 	_tx, _ := ctx.Tx().(*sqlx.Tx)
-	_sql, args, _ := squirrel.Insert(pa.TableName()).Columns("uuid", "id", "pw", "name", "profile_uri").
+	_sql, args, _ := squirrel.Insert("parent_auth").
+		Columns("uuid", "id", "pw", "name", "profile_uri").
 		Values(pa.UUID, pa.ID, pa.PW, pa.Name, pa.ProfileUri).ToSql()
 	
 	switch _, err = _tx.Exec(_sql, args...); tErr := err.(type) {
@@ -114,16 +115,16 @@ func (ar *parentAuthRepository) Store(ctx tx.Context, pa *domain.ParentAuth) (er
 
 // getAvailableUUID method return available uuid of parent auth table
 func (ar *parentAuthRepository) getAvailableUUID(ctx tx.Context) (string, error) {
-	auth := new(domain.ParentAuth)
+	pa := new(domain.ParentAuth)
 
 	for {
-		auth.SetRandomUUID()
-		_, err := ar.GetByUUID(ctx, auth.UUID)
+		uuid := pa.GenerateRandomUUID()
+		_, err := ar.GetByUUID(ctx, uuid)
 
 		if err == nil {
 			continue
 		} else if ok, _ := isRowNotExist(err); ok {
-			return auth.UUID, nil
+			return uuid, nil
 		} else {
 			return "", errors.Wrap(err, "failed to GetByUUID")
 		}
