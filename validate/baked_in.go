@@ -1,7 +1,9 @@
 package validate
 
 import (
+	"database/sql/driver"
 	"github.com/go-playground/validator/v10"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -37,4 +39,15 @@ func isWithinRange(fl validator.FieldLevel) bool {
 
 	field := int(fl.Field().Int())
 	return field >= start && field <= end
+}
+
+// sqlNullStringType function assert driver.Valuer & return Value()
+func sqlNullStringType(field reflect.Value) (v interface{}) {
+	v = ""
+	if valuer, ok := field.Interface().(driver.Valuer); ok {
+		if value, err := valuer.Value(); err != nil {
+			v = value
+		}
+	}
+	return
 }
