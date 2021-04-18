@@ -64,7 +64,8 @@ type messageAgency interface {
 func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (err error) {
 	_tx, err := au.txHandler.BeginTx(ctx, nil)
 	if err != nil {
-		return errors.Wrap(err, "failed to begin transaction")
+		err = errors.Wrap(err, "failed to begin transaction")
+		return
 	}
 
 	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, pn)
@@ -105,6 +106,50 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 	content := fmt.Sprintf("[육아는 처음이지 인증 번호]\n회원가입 인증 번호: %d", ppc.CertifyCode)
 	if err = au.messageAgency.SendSMSToOne(ppc.PhoneNumber, content); err != nil {
 		err = internalServerErr{errors.Wrap(err, "SendSMSToOne return unexpected error")}
+		_ = au.txHandler.Rollback(_tx)
+		return
+	}
+
+	_ = au.txHandler.Commit(_tx)
+	return nil
+}
+
+// CertifyPhoneWithCode is implement domain.AuthUsecase interface
+func (au *authUsecase) CertifyPhoneWithCode(ctx context.Context, pn string, code int64) (err error) {
+	_tx, err := au.txHandler.BeginTx(ctx, nil)
+	if err != nil {
+		err = errors.Wrap(err, "failed to begin transaction")
+		return
+	}
+
+	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, pn)
+	switch err.(type) {
+	case nil:
+		if ppc.Certified.Valid && ppc.Certified.Bool {
+			err = conflictErr{errors.New("this phone number is already in certified"), -111}
+			_ = au.txHandler.Rollback(_tx)
+			return
+		}
+		if code != ppc.CertifyCode {
+			err = conflictErr{errors.New("incorrect certify code to that phone number"), -112}
+			_ = au.txHandler.Rollback(_tx)
+			return
+		}
+		ppc.Certified = sql.NullBool{Bool: true, Valid: true}
+		switch err = au.parentPhoneCertifyRepository.Update(_tx, &ppc); err.(type) {
+		case nil:
+			break
+		default:
+			err = internalServerErr{errors.Wrap(err, "phone Update return unexpected error")}
+			_ = au.txHandler.Rollback(_tx)
+			return
+		}
+	case rowNotExistErr:
+		err = notFoundErr{errors.New("not exist phone number")}
+		_ = au.txHandler.Rollback(_tx)
+		return
+	default:
+		err = internalServerErr{errors.Wrap(err, "GetByPhoneNumber return unexpected error")}
 		_ = au.txHandler.Rollback(_tx)
 		return
 	}
