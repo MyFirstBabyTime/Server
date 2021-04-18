@@ -48,6 +48,12 @@ type TxHandler interface {
 	Rollback(tx tx.Context) (err error)
 }
 
+// messageAgency is agency that agent various command about message
+type messageAgency interface {
+	// SendSMSToOne method send SMS message to one receiver
+	SendSMSToOne(receiver, content string) (err error)
+}
+
 // SendCertifyCodeToPhone is implement domain.AuthUsecase interface
 func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (err error) {
 	_tx, err := au.txHandler.BeginTx(ctx, nil)
