@@ -57,6 +57,11 @@ func (pp *parentPhoneCertifyRepository) Store(ctx tx.Context, ppc *domain.Parent
 		ppc.CertifyCode = ppc.GenerateCertifyCode()
 	}
 
+	if err = pp.validator.ValidateStruct(ppc); err != nil {
+		err = invalidModelErr{errors.Wrap(err, "failed to validate domain.ParentPhoneCertify")}
+		return
+	}
+
 	_tx, _ := ctx.Tx().(*sqlx.Tx)
 	_sql, args, _ := squirrel.Insert("parent_phone_certify").
 		Columns("parent_uuid", "phone_number", "certify_code").

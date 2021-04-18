@@ -72,7 +72,8 @@ func (ar *parentAuthRepository) GetByUUID(ctx tx.Context, uuid string) (auth str
 func (ar *parentAuthRepository) GetByID(ctx tx.Context, id string) (auth struct {
 	domain.ParentAuth
 	domain.ParentPhoneCertify
-}, err error) {_tx, _ := ctx.Tx().(*sqlx.Tx)
+}, err error) {
+	_tx, _ := ctx.Tx().(*sqlx.Tx)
 	_sql, args, _ := squirrel.Select("parent_auth.*, IF(phone_number IS NULL, '', phone_number) AS phone_number").
 		From("parent_auth").
 		LeftJoin("parent_phone_certify ON parent_auth.uuid = parent_phone_certify.parent_uuid").
@@ -96,6 +97,11 @@ func (ar *parentAuthRepository) Store(ctx tx.Context, pa *domain.ParentAuth) (er
 			err = errors.Wrap(err, "failed to getAvailableUUID")
 			return
 		}
+	}
+
+	if err = ar.validator.ValidateStruct(pa); err != nil {
+		err = invalidModelErr{errors.Wrap(err, "failed to validate domain.ParentAuth")}
+		return
 	}
 
 	_tx, _ := ctx.Tx().(*sqlx.Tx)
