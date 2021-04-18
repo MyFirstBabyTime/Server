@@ -60,7 +60,7 @@ func (pn ParentPhoneCertify) TableName() string {
 // Schema return schema SQL about ParentPhoneNumber model
 func (pn ParentPhoneCertify) Schema() string {
 	return `CREATE TABLE parent_phone_certify (
-		parent_uuid  CHAR(11),
+		parent_uuid  CHAR(11) UNIQUE,
 		phone_number CHAR(11) NOT NULL,
 		certify_code INT(11)  NOT NULL,
 		certified    TINYINT  NOT NULL DEFAULT 0,
