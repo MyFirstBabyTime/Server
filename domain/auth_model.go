@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"time"
 )
 
@@ -69,4 +70,16 @@ func (pn ParentPhoneCertify) Schema() string {
         	REFERENCES parent_auth(uuid)
         	ON DELETE CASCADE
 	);`
+}
+
+// GenerateCertifyCode method return CertifyCode value
+func (pn *ParentPhoneCertify) GenerateCertifyCode() int {
+	rand.Seed(time.Now().UnixNano())
+	is := []rune("0123456789")
+	random := make([]rune, 6)
+	for i := range random {
+		random[i] = is[rand.Intn(len(is))]
+	}
+	v, _ := strconv.Atoi(string(random))
+	return v
 }
