@@ -21,4 +21,16 @@ type authUsecase struct {
 // AuthUsecase return implementation of domain.AuthUsecase
 func AuthUsecase() domain.AuthUsecase {
 	return &authUsecase{}
+
+// TxHandler is used for handling transaction to begin & commit or rollback
+type TxHandler interface {
+	// BeginTx method start transaction (get option from ctx)
+	BeginTx(ctx context.Context, opts interface{}) (tx tx.Context, err error)
+
+	// Commit method commit transaction
+	Commit(tx tx.Context) (err error)
+
+	// Rollback method rollback transaction
+	Rollback(tx tx.Context) (err error)
+}
 }
