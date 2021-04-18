@@ -18,6 +18,7 @@ type parentAuthRepository struct {
 	db           *sqlx.DB
 	migrator     migrator
 	sqlMsgParser sqlMsgParser
+	validator    validator
 }
 
 // sqlMsgParser is interface used for parse sql result message
@@ -32,11 +33,13 @@ type validator interface {
 }
 
 // ParentAuthRepository return implementation of domain.ParentAuthRepository using mysql
-func ParentAuthRepository(db *sqlx.DB, sp sqlMsgParser) domain.ParentAuthRepository {
+func ParentAuthRepository(db *sqlx.DB, sp sqlMsgParser, v validator) domain.ParentAuthRepository {
 	repo := &parentAuthRepository{
 		db:           db,
 		sqlMsgParser: sp,
+		validator:    v,
 	}
+
 	if err := repo.migrator.MigrateModel(repo.db, domain.ParentAuth{}); err != nil {
 		log.Fatal(errors.Wrap(err, "failed to migrate parent auth model").Error())
 	}

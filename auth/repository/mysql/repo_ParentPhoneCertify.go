@@ -20,14 +20,17 @@ type parentPhoneCertifyRepository struct {
 	db           *sqlx.DB
 	migrator     migrator
 	sqlMsgParser sqlMsgParser
+	validator    validator
 }
 
 // ParentPhoneCertifyRepository return implementation of domain.ParentPhoneCertifyRepository using mysql
-func ParentPhoneCertifyRepository(db *sqlx.DB, sp sqlMsgParser) domain.ParentPhoneCertifyRepository {
+func ParentPhoneCertifyRepository(db *sqlx.DB, sp sqlMsgParser, v validator) domain.ParentPhoneCertifyRepository {
 	repo := &parentPhoneCertifyRepository{
 		db:           db,
 		sqlMsgParser: sp,
+		validator:    v,
 	}
+
 	if err := repo.migrator.MigrateModel(repo.db, domain.ParentPhoneCertify{}); err != nil {
 		log.Fatal(errors.Wrap(err, "failed to migrate parent phone certify").Error())
 	}
