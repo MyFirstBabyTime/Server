@@ -40,9 +40,9 @@ type noReferencedRowErr struct {
 	error
 	foreignKey string
 }
-func (nre noReferencedRowErr) Error() string { return nre.error.Error() }
-func (nre noReferencedRowErr) IsNoReferenced() bool { return true }
-func (nre noReferencedRowErr) ForeignKey() string { return nre.foreignKey }
+func (err noReferencedRowErr) Error() string { return err.error.Error() }
+func (err noReferencedRowErr) IsNoReferenced() bool { return true }
+func (err noReferencedRowErr) ForeignKey() string { return err.foreignKey }
 
 // noReferencedRow interface & isNoReferencedRow method is used for check & get error context
 type noReferencedRow interface {
@@ -52,4 +52,20 @@ type noReferencedRow interface {
 func isNoReferencedRow(err error) (bool, noReferencedRow) {
 	nr, ok := err.(noReferencedRow)
 	return ok && nr.IsNoReferencedRow(), nr
+}
+
+// invalidModelErr is error type & used for row not exist error
+type invalidModelErr struct {
+	error
+}
+func (err invalidModelErr) Error() string { return err.error.Error() }
+func (err invalidModelErr) IsInvalidModel() bool { return true }
+
+// invalidModel interface & isInvalidModel method is used for check & get error context
+type invalidModel interface {
+	IsInvalidModel() bool
+}
+func isInvalidModel(err error) (bool, invalidModel) {
+	im, ok := err.(invalidModel)
+	return ok && im.IsInvalidModel(), im
 }
