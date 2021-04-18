@@ -101,4 +101,14 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 		_ = au.txHandler.Rollback(_tx)
 		return
 	}
+
+	content := fmt.Sprintf("[육아는 처음이지 인증 번호]\n회원가입 인증 번호 : %s", ppc.CertifyCode)
+	if err = au.messageAgency.SendSMSToOne(ppc.PhoneNumber, content); err != nil {
+		err = internalServerErr{errors.Wrap(err, "SendSMSToOne return unexpected error")}
+		_ = au.txHandler.Rollback(_tx)
+		return
+	}
+
+	_ = au.txHandler.Commit(_tx)
+	return nil
 }
