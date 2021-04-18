@@ -1,8 +1,13 @@
 package usecase
 
 import (
+	"context"
+	"database/sql"
+	"fmt"
+	"github.com/pkg/errors"
 
 	"github.com/MyFirstBabyTime/Server/domain"
+	"github.com/MyFirstBabyTime/Server/tx"
 )
 
 // authUsecase is used for usecase layer which implement domain.AuthUsecase interface
@@ -28,7 +33,7 @@ func AuthUsecase(
 		parentAuthRepository:         par,
 		parentPhoneCertifyRepository: ppr,
 		txHandler:                    th,
-}
+	}
 }
 
 // TxHandler is used for handling transaction to begin & commit or rollback
@@ -42,4 +47,46 @@ type TxHandler interface {
 	// Rollback method rollback transaction
 	Rollback(tx tx.Context) (err error)
 }
+
+// SendCertifyCodeToPhone is implement domain.AuthUsecase interface
+func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (err error) {
+	_tx, err := au.txHandler.BeginTx(ctx, nil)
+	if err != nil {
+		return errors.Wrap(err, "failed to begin transaction")
+	}
+
+	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, pn)
+	switch err.(type) {
+	case nil:
+		if ppc.ParentUUID.Valid {
+			err = conflictErr{errors.New("this phone number is already in use"), -101}
+			_ = au.txHandler.Rollback(_tx)
+			return
+		}
+		ppc.CertifyCode = ppc.GenerateCertifyCode()
+		ppc.Certified = sql.NullBool{Bool: false, Valid: true}
+		switch err = au.parentPhoneCertifyRepository.Update(_tx, &ppc); err.(type) {
+		case nil:
+			break
+		default:
+			err = internalServerErr{errors.Wrap(err, "phone Update return unexpected error")}
+			_ = au.txHandler.Rollback(_tx)
+			return
+		}
+	case rowNotExistErr:
+		ppc = domain.ParentPhoneCertify{PhoneNumber: pn}
+		ppc.CertifyCode = ppc.GenerateCertifyCode()
+		switch err = au.parentPhoneCertifyRepository.Store(_tx, &ppc); err.(type) {
+		case nil:
+			break
+		default:
+			err = internalServerErr{errors.Wrap(err, "phone Store return unexpected error")}
+			_ = au.txHandler.Rollback(_tx)
+			return
+		}
+	default:
+		err = internalServerErr{errors.Wrap(err, "GetByPhoneNumber return unexpected error")}
+		_ = au.txHandler.Rollback(_tx)
+		return
+	}
 }
