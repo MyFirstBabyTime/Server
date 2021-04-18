@@ -49,7 +49,7 @@ func (pa ParentAuth) GenerateRandomUUID() string {
 type ParentPhoneCertify struct {
 	ParentUUID  sql.NullString `db:"parent_uuid" validate:"uuid=parent"`
 	PhoneNumber string         `db:"phone_number" validate:"required,len=11"`
-	CertifyCode int            `db:"certify_code" validate:"required,range=100000~999999"`
+	CertifyCode int64          `db:"certify_code" validate:"required,range=100000~999999"`
 	Certified   sql.NullBool   `db:"certified"`
 }
 
@@ -73,7 +73,7 @@ func (pn ParentPhoneCertify) Schema() string {
 }
 
 // GenerateCertifyCode method return CertifyCode value
-func (pn *ParentPhoneCertify) GenerateCertifyCode() int {
+func (pn *ParentPhoneCertify) GenerateCertifyCode() int64 {
 	rand.Seed(time.Now().UnixNano())
 	is := []rune("0123456789")
 	random := make([]rune, 6)
@@ -81,13 +81,13 @@ func (pn *ParentPhoneCertify) GenerateCertifyCode() int {
 		random[i] = is[rand.Intn(len(is))]
 	}
 	v, _ := strconv.Atoi(string(random))
-	return v
+	return int64(v)
 }
 
 // GenerateValidModel method return model referenced by value with set valid value
 func (pn ParentPhoneCertify) GenerateValidModel() ParentPhoneCertify {
 	var (
-		validCertifyCode = 123456
+		validCertifyCode int64 = 123456
 	)
 
 	if pn.CertifyCode == 0 {
