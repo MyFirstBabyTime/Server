@@ -15,8 +15,6 @@ import (
 
 // parentPhoneCertifyRepository is implementation of domain.AuthRepository using mysql
 type parentPhoneCertifyRepository struct {
-	domain.ParentPhoneCertifyRepository
-
 	db           *sqlx.DB
 	migrator     migrator
 	sqlMsgParser sqlMsgParser
@@ -37,6 +35,7 @@ func ParentPhoneCertifyRepository(db *sqlx.DB, sp sqlMsgParser, v validator) dom
 	return repo
 }
 
+// GetByPhoneNumber is implement domain.ParentPhoneCertifyRepository interface
 func (pp *parentPhoneCertifyRepository) GetByPhoneNumber(ctx tx.Context, pn string) (ppc domain.ParentPhoneCertify, err error) {
 	_tx, _ := ctx.Tx().(*sqlx.Tx)
 	_sql, args, _ := squirrel.Select("*").From("parent_phone_certify").Where("phone_number = ?", pn).ToSql()
@@ -52,6 +51,7 @@ func (pp *parentPhoneCertifyRepository) GetByPhoneNumber(ctx tx.Context, pn stri
 	return
 }
 
+// Store is implement domain.ParentPhoneCertifyRepository interface
 func (pp *parentPhoneCertifyRepository) Store(ctx tx.Context, ppc *domain.ParentPhoneCertify) (err error) {
 	if ppc.CertifyCode == 0 {
 		ppc.CertifyCode = ppc.GenerateCertifyCode()
@@ -85,6 +85,55 @@ func (pp *parentPhoneCertifyRepository) Store(ctx tx.Context, ppc *domain.Parent
 		}
 	default:
 		err = errors.Wrap(err, "insert parent auth return unexpected error type")
+	}
+	return
+}
+
+// Update is implement domain.ParentPhoneCertifyRepository interface
+// where -> PK, set -> field with value set (so, cannot set to NULL in this method)
+func (pp *parentPhoneCertifyRepository) Update(ctx tx.Context, ppc *domain.ParentPhoneCertify) (err error) {
+	if ppc.PhoneNumber == "" {
+		err = errors.New("PhoneNumber(PK) value in model must be set")
+		return
+	}
+
+	if err = pp.validator.ValidateStruct(ppc.GenerateValidModel()); err != nil {
+		err = invalidModelErr{errors.Wrap(err, "failed to validate domain.ParentPhoneCertify")}
+		return
+	}
+
+	b := squirrel.Update("parent_phone_certify").Where("phone_number = ?", ppc.PhoneNumber)
+	if v, err := ppc.ParentUUID.Value(); err == nil && v != nil {
+		b = b.Set("parent_uuid", v)
+	}
+	if ppc.CertifyCode != 0 {
+		b = b.Set("certify_code", ppc.CertifyCode)
+	}
+	if v, err := ppc.Certified.Value(); err == nil && v != nil {
+		b = b.Set("certified", v)
+	}
+
+	_tx, _ := ctx.Tx().(*sqlx.Tx)
+	_sql, args, err := b.ToSql()
+	if err != nil {
+		err = invalidModelErr{errors.New("update statements must have at least one")}
+		return
+	}
+
+	switch _, err = _tx.Exec(_sql, args...); tErr := err.(type) {
+	case nil:
+		break
+	case *mysql.MySQLError:
+		switch tErr.Number {
+		case mysqlerr.ER_NO_REFERENCED_ROW_2:
+			err = errors.Wrap(err, "failed to update parent phone certify")
+			fk := pp.sqlMsgParser.NoReferencedRow(tErr.Message)
+			err = noReferencedRowErr{err, fk}
+		default:
+			err = errors.Wrap(err, "update parent auth return unexpected code return")
+		}
+	default:
+		err = errors.Wrap(err, "update parent auth return unexpected error type")
 	}
 	return
 }
