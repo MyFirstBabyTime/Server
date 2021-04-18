@@ -20,13 +20,6 @@ type AuthUsecase interface {
 	LoginParentAuth(ctx context.Context, id, pw string) (uuid, token string, err error)
 }
 
-//TXHandler will be moved into usecase layer
-//type TXHandler interface {
-//	BeginTx(ctx context.Context, opts interface{}) (ctx context.TX, err error) // BeginTx method start transaction (get option from ctx)
-//	Commit(tx tx.Context) (err error)                       // Commit method commit transaction
-//	Rollback(tx tx.Context) (err error)                     // Rollback method rollback transaction
-//}
-
 // ParentAuthRepository is repository interface about ParentAuth model
 type ParentAuthRepository interface {
 	GetByUUID(ctx tx.Context, uuid string) (struct{
