@@ -1,5 +1,14 @@
 package usecase
 
+import "net/http"
+
+// notFoundErr is error type & used for not found status
+type notFoundErr struct {
+	error
+}
+func (_ notFoundErr) NotFound() {}
+func (err notFoundErr) Status() int { return http.StatusNotFound }
+
 // conflictErr is error type & used for conflict status
 type conflictErr struct {
 	error
