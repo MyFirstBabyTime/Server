@@ -21,8 +21,9 @@ type parentAuthRepository struct {
 }
 
 // sqlMsgParser is interface used for parse sql result message
-type sqlMsgParser interface{
+type sqlMsgParser interface {
 	EntryDuplicate(msg string) (entry, key string)
+	NoReferencedRow(msg string) (fk string)
 }
 
 // ParentAuthRepository return implementation of domain.ParentAuthRepository using mysql
