@@ -74,6 +74,12 @@ type hashHandler interface {
 	CompareHashAndPW(hash, pw string) (err error)
 }
 
+// jwtHandler is interface about JWT handler
+type jwtHandler interface {
+	// GenerateUUIDJWT generate & return JWT UUID token with type & time
+	GenerateUUIDJWT(uuid, _type string, time time.Duration) (token string, err error)
+}
+
 // SendCertifyCodeToPhone is implement domain.AuthUsecase interface
 func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (err error) {
 	_tx, err := au.txHandler.BeginTx(ctx, nil)
