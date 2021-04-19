@@ -13,7 +13,6 @@ import (
 
 // authUsecase is used for usecase layer which implement domain.AuthUsecase interface
 type authUsecase struct {
-
 	// parentAuthRepository is repository interface about domain.ParentAuth model
 	parentAuthRepository domain.ParentAuthRepository
 
@@ -98,7 +97,7 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 	switch err.(type) {
 	case nil:
 		if ppc.ParentUUID.Valid {
-			err = conflictErr{errors.New("this phone number is already in use"), -101}
+			err = conflictErr{errors.New("this phone number is already in use"), phoneAlreadyInUse}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
@@ -152,12 +151,12 @@ func (au *authUsecase) CertifyPhoneWithCode(ctx context.Context, pn string, code
 	switch err.(type) {
 	case nil:
 		if ppc.Certified.Valid && ppc.Certified.Bool {
-			err = conflictErr{errors.New("this phone number is already certified"), -111}
+			err = conflictErr{errors.New("this phone number is already certified"), phoneAlreadyCertified}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
 		if code != ppc.CertifyCode {
-			err = conflictErr{errors.New("incorrect certify code to that phone number"), -112}
+			err = conflictErr{errors.New("incorrect certify code to that phone number"), incorrectCertifyCode}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
@@ -212,7 +211,7 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pa *domain.ParentAuth, 
 		case entryDuplicateErr:
 			switch tErr.DuplicateKey() {
 			case "id":
-				err = conflictErr{errors.New("this parent ID is already in use"), -122}
+				err = conflictErr{errors.New("this parent ID is already in use"), parentIDAlreadyInUse}
 				_ = au.txHandler.Rollback(_tx)
 				return
 			default:
@@ -227,7 +226,7 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pa *domain.ParentAuth, 
 		}
 	} else {
 		if _, ok := err.(rowNotExistErr); err == nil || ok {
-			err = conflictErr{errors.New("this phone number is not certified"), -121}
+			err = conflictErr{errors.New("this phone number is not certified"), uncertifiedPhone}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		} else {
@@ -256,7 +255,7 @@ func (au *authUsecase) LoginParentAuth(ctx context.Context, id, pw string) (uuid
 		case nil:
 			break
 		case interface{ Mismatch() }:
-			err = conflictErr{errors.New("incorrect password"), -132}
+			err = conflictErr{errors.New("incorrect password"), incorrectParentPW}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		default:
@@ -265,7 +264,7 @@ func (au *authUsecase) LoginParentAuth(ctx context.Context, id, pw string) (uuid
 			return
 		}
 	case rowNotExistErr:
-		err = conflictErr{errors.New("not exist parent ID"), -131}
+		err = conflictErr{errors.New("not exist parent ID"), notExistParentID}
 		_ = au.txHandler.Rollback(_tx)
 		return
 	default:
