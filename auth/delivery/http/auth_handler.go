@@ -74,7 +74,9 @@ func (ah *authHandler) CertifyPhoneWithCode(c *gin.Context) {
 }
 
 // bindRequest method bind *gin.Context to request having BindFrom method
-func (ah *authHandler) bindRequest(req interface{ BindFrom(ctx *gin.Context) error }, c *gin.Context) error {
+func (ah *authHandler) bindRequest(req interface {
+	BindFrom(ctx *gin.Context) error
+}, c *gin.Context) error {
 	if err := req.BindFrom(c); err != nil {
 		return errors.Wrap(err, "failed to bind req")
 	}
