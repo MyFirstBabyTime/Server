@@ -65,5 +65,7 @@ func defaultResp(status, code int, msg string) interface{} {
 		Status  int    `json:"status"`
 		Code    int    `json:"code"`
 		Message string `json:"message"`
-	}{status, code, msg}
+}) {
+	resp.Status, resp.Code, resp.Message = status, code, msg
+	return
 }
