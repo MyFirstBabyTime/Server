@@ -23,3 +23,9 @@ func (bh *bcryptHandler) generateHashFromPW(pw string, salt int) (string, error)
 	b, err := bcrypt.GenerateFromPassword([]byte(pw), salt)
 	return string(b), err
 }
+
+// mismatchErr is error type represent hash & password mismatch error
+type mismatchErr struct {
+	error
+}
+func (_ mismatchErr) Mismatch() {}
