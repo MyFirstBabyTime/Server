@@ -193,6 +193,11 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pa *domain.ParentAuth, 
 
 	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, pn)
 	if err == nil && ppc.Certified.Valid && ppc.Certified.Bool {
+		if ppc.ParentUUID.Valid {
+			err = conflictErr(errors.New("this phone number is already in use"), phoneAlreadyInUse)
+			_ = au.txHandler.Rollback(_tx)
+			return
+		}
 		if pa.PW, err = au.hashHandler.GenerateHashWithMinSalt(pa.PW); err != nil {
 			err = internalServerErr(errors.Wrap(err, "failed to GenerateHashWithMinSalt"))
 			_ = au.txHandler.Rollback(_tx)
@@ -234,6 +239,13 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pa *domain.ParentAuth, 
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
+	}
+
+	ppc.ParentUUID = sql.NullString{String: pa.UUID, Valid: true}
+	if err = au.parentPhoneCertifyRepository.Update(_tx, &ppc); err != nil {
+		err = internalServerErr(errors.Wrap(err, "phone Update return unexpected error"))
+		_ = au.txHandler.Rollback(_tx)
+		return
 	}
 
 	_ = au.txHandler.Commit(_tx)
