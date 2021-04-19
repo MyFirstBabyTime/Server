@@ -68,7 +68,7 @@ type messageAgency interface {
 // hashHandler is interface about hash handler
 type hashHandler interface {
 	// GenerateHashWithMinSalt generate & return hashed value from password with minimum salt
-	GenerateHashWithMinSalt(pw string) (hash string)
+	GenerateHashWithMinSalt(pw string) (hash string, err error)
 
 	// CompareHashAndPW compare hashed value and password & return error
 	CompareHashAndPW(hash, pw string) (err error)
@@ -140,7 +140,7 @@ func (au *authUsecase) CertifyPhoneWithCode(ctx context.Context, pn string, code
 	switch err.(type) {
 	case nil:
 		if ppc.Certified.Valid && ppc.Certified.Bool {
-			err = conflictErr{errors.New("this phone number is already in certified"), -111}
+			err = conflictErr{errors.New("this phone number is already certified"), -111}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
