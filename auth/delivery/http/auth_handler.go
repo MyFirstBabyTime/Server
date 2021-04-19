@@ -33,8 +33,8 @@ func NewAuthHandler(e *gin.Engine, au domain.AuthUsecase, v validator) {
 // SendCertifyCodeToPhone is implement domain.AuthUsecase interface
 func (ah *authHandler) SendCertifyCodeToPhone(c *gin.Context) {
 	req := new(sendCertifyCodeToPhoneRequest)
-	if err := c.BindUri(req); err != nil {
-		resp := defaultResp(http.StatusUnprocessableEntity, 0, errors.Wrap(err, "failed to bind req").Error())
+	if err := ah.bindRequest(req, c); err != nil {
+		c.JSON(http.StatusBadRequest, defaultResp(http.StatusBadRequest, 0, err.Error()))
 		c.JSON(http.StatusUnprocessableEntity, resp)
 		return
 	}
