@@ -10,7 +10,7 @@ services:
       published: 8000
       protocol: tcp
       mode: host
-    entrypoint:
+    environment:
       - VERSION=${VERSION}
     deploy:
       mode: replicated
