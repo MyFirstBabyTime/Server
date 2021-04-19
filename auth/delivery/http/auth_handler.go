@@ -27,6 +27,7 @@ func NewAuthHandler(r *gin.Engine, au domain.AuthUsecase, v validator) {
 
 	r.POST("phones/phone-number/:phone_number/certify-code", h.SendCertifyCodeToPhone)
 	r.POST("phones/phone-number/:phone_number/certification", h.CertifyPhoneWithCode)
+	r.POST("parents", h.SignUpParent)
 }
 
 // SendCertifyCodeToPhone is implement domain.AuthUsecase interface
@@ -62,12 +63,34 @@ func (ah *authHandler) CertifyPhoneWithCode(c *gin.Context) {
 
 	switch err := ah.aUsecase.CertifyPhoneWithCode(c.Request.Context(), req.PhoneNumber, req.CertifyCode); tErr := err.(type) {
 	case nil:
-		resp := defaultResp(http.StatusOK, 0, "succeed to send certify code to phone")
+		resp := defaultResp(http.StatusOK, 0, "succeed to certify phone with certify code")
 		c.JSON(http.StatusOK, resp)
 	case usecaseErr:
 		c.JSON(tErr.Status(), defaultResp(tErr.Status(), tErr.Code(), tErr.Error()))
 	default:
 		msg := errors.Wrap(err, "CertifyPhoneWithCode return unexpected error").Error()
+		c.JSON(http.StatusInternalServerError, defaultResp(http.StatusInternalServerError, 0, msg))
+	}
+	return
+}
+
+// SignUpParent is implement domain.AuthUsecase interface
+func (ah *authHandler) SignUpParent(c *gin.Context) {
+	req := new(signUpParentRequest)
+	if err := ah.bindRequest(req, c); err != nil {
+		c.JSON(http.StatusBadRequest, defaultResp(http.StatusBadRequest, 0, err.Error()))
+		return
+	}
+
+	pa := &domain.ParentAuth{ID: req.ID, PW: req.PW, Name: req.Name}
+	switch err := ah.aUsecase.SignUpParent(c.Request.Context(), pa, req.PhoneNumber); tErr := err.(type) {
+	case nil:
+		resp := defaultResp(http.StatusCreated, 0, "succeed to sign up new parent auth")
+		c.JSON(http.StatusOK, resp)
+	case usecaseErr:
+		c.JSON(tErr.Status(), defaultResp(tErr.Status(), tErr.Code(), tErr.Error()))
+	default:
+		msg := errors.Wrap(err, "SignUpParent return unexpected error").Error()
 		c.JSON(http.StatusInternalServerError, defaultResp(http.StatusInternalServerError, 0, msg))
 	}
 	return
