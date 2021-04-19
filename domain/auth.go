@@ -30,6 +30,7 @@ type ParentAuthRepository interface {
 		ParentAuth
 		ParentPhoneCertify
 	}, error)
+	GetAvailableUUID(ctx tx.Context) (uuid string, err error)
 	Store(ctx tx.Context, pa *ParentAuth) error
 }
 
