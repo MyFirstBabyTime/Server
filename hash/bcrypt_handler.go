@@ -1,6 +1,9 @@
 package hash
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
+)
 
 // bcryptHandler is hash handler using bcrypt algorithm
 type bcryptHandler struct {}
@@ -16,7 +19,13 @@ func (bh *bcryptHandler) GenerateHashWithMinSalt(pw string) (string, error) {
 
 // CompareHashAndPW compare hashed value and password & return error
 func (bh *bcryptHandler) CompareHashAndPW(hash, pw string) (err error) {
-	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(pw))
+	switch err = bcrypt.CompareHashAndPassword([]byte(hash), []byte(pw)); err {
+	case bcrypt.ErrMismatchedHashAndPassword:
+		err = mismatchErr{errors.Wrap(err, "failed to CompareHashAndPassword")}
+	default:
+		err = errors.Wrap(err, "CompareHashAndPassword return unexpected error")
+	}
+	return
 }
 
 func (bh *bcryptHandler) generateHashFromPW(pw string, salt int) (string, error) {
