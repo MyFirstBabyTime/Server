@@ -110,11 +110,10 @@ func (ah *authHandler) bindRequest(req interface {
 }
 
 // defaultResp return response have status, code, message inform
-func defaultResp(status, code int, msg string) (resp struct{
-	Status  int    `json:"status"`
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}) {
-	resp.Status, resp.Code, resp.Message = status, code, msg
+func defaultResp(status, code int, msg string) (resp gin.H) {
+	resp = gin.H{}
+	resp["status"] = status
+	resp["code"] = code
+	resp["message"] = msg
 	return
 }
