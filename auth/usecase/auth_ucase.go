@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/pkg/errors"
+	"time"
 
 	"github.com/MyFirstBabyTime/Server/domain"
 	"github.com/MyFirstBabyTime/Server/tx"
@@ -238,4 +239,45 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pa *domain.ParentAuth, 
 
 	_ = au.txHandler.Commit(_tx)
 	return nil
+}
+
+// LoginParentAuth is implement domain.AuthUsecase interface
+func (au *authUsecase) LoginParentAuth(ctx context.Context, id, pw string) (uuid, token string, err error) {
+	_tx, err := au.txHandler.BeginTx(ctx, nil)
+	if err != nil {
+		err = errors.Wrap(err, "failed to begin transaction")
+		return
+	}
+
+	pa, err := au.parentAuthRepository.GetByID(_tx, id)
+	switch err.(type) {
+	case nil:
+		switch err = au.hashHandler.CompareHashAndPW(pa.PW, pw); err.(type) {
+		case nil:
+			break
+		case interface{ Mismatch() }:
+			err = conflictErr{errors.New("incorrect password"), -132}
+			_ = au.txHandler.Rollback(_tx)
+			return
+		default:
+			err = internalServerErr{errors.Wrap(err, "CompareHashAndPW return unexpected error")}
+			_ = au.txHandler.Rollback(_tx)
+			return
+		}
+	case rowNotExistErr:
+		err = conflictErr{errors.New("not exist parent ID"), -131}
+		_ = au.txHandler.Rollback(_tx)
+		return
+	default:
+		err = internalServerErr{errors.Wrap(err, "GetByID return unexpected error")}
+		_ = au.txHandler.Rollback(_tx)
+		return
+	}
+
+	uuid = pa.UUID
+	token, err = au.jwtHandler.GenerateUUIDJWT(pa.UUID, "access_token", time.Hour*24)
+	err = nil
+
+	_ = au.txHandler.Commit(_tx)
+	return
 }
