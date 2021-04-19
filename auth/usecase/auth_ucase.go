@@ -20,22 +20,26 @@ type authUsecase struct {
 	parentPhoneCertifyRepository domain.ParentPhoneCertifyRepository
 
 	// txHandler is used for handling transaction to begin & commit or rollback
-	txHandler TxHandler
+	txHandler txHandler
 
 	// messageAgency is used as agency about message API
 	messageAgency messageAgency
 
 	// messageAgency is used as handler about hashing
 	hashHandler hashHandler
+
+	// jwtHandler is used as handler about jwt
+	jwtHandler jwtHandler
 }
 
 // AuthUsecase return implementation of domain.AuthUsecase
 func AuthUsecase(
 	par domain.ParentAuthRepository,
 	ppr domain.ParentPhoneCertifyRepository,
-	th TxHandler,
+	th txHandler,
 	ma messageAgency,
 	hh hashHandler,
+	jh jwtHandler,
 ) domain.AuthUsecase {
 	return &authUsecase{
 		parentAuthRepository:         par,
@@ -44,11 +48,12 @@ func AuthUsecase(
 		txHandler:     th,
 		messageAgency: ma,
 		hashHandler:   hh,
+		jwtHandler:    jh,
 	}
 }
 
-// TxHandler is used for handling transaction to begin & commit or rollback
-type TxHandler interface {
+// txHandler is used for handling transaction to begin & commit or rollback
+type txHandler interface {
 	// BeginTx method start transaction (get option from ctx)
 	BeginTx(ctx context.Context, opts interface{}) (tx tx.Context, err error)
 
