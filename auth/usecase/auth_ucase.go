@@ -24,6 +24,9 @@ type authUsecase struct {
 
 	// messageAgency is used as agency about message API
 	messageAgency messageAgency
+
+	// messageAgency is used as handler about hashing
+	hashHandler hashHandler
 }
 
 // AuthUsecase return implementation of domain.AuthUsecase
@@ -32,6 +35,7 @@ func AuthUsecase(
 	ppr domain.ParentPhoneCertifyRepository,
 	th TxHandler,
 	ma messageAgency,
+	hh hashHandler,
 ) domain.AuthUsecase {
 	return &authUsecase{
 		parentAuthRepository:         par,
@@ -39,6 +43,7 @@ func AuthUsecase(
 
 		txHandler:     th,
 		messageAgency: ma,
+		hashHandler:   hh,
 	}
 }
 
