@@ -5,10 +5,10 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// modelValidatorInstance is global variable returned in ModelValidator function
-var modelValidatorInstance *modelValidator
+// validatorInstance is global variable returned in customValidator function
+var validatorInstance *customValidator
 
-// initialize modelValidatorInstance with registering custom validation
+// initialize customValidator with registering custom validation
 func init() {
 	v := validator.New()
 
@@ -17,19 +17,19 @@ func init() {
 
 	v.RegisterCustomTypeFunc(sqlNullStringType, sql.NullString{})
 
-	modelValidatorInstance = &modelValidator{v}
+	validatorInstance = &customValidator{v}
 }
 
-// ModelValidator function return modelValidatorInstance global variable
-func ModelValidator() *modelValidator {
-	return modelValidatorInstance
+// New function return customValidator global variable
+func New() *customValidator {
+	return validatorInstance
 }
 
-// modelValidator is struct embedding *validator.Validate which is registered custom validation
-type modelValidator struct {
+// customValidator is struct embedding *validator.Validate which is registered custom validation
+type customValidator struct {
 	*validator.Validate
 }
 
-func (mv *modelValidator) ValidateStruct(s interface{}) error {
+func (mv *customValidator) ValidateStruct(s interface{}) error {
 	return mv.Struct(s)
 }
