@@ -60,6 +60,15 @@ type messageAgency interface {
 	SendSMSToOne(receiver, content string) (err error)
 }
 
+// hashHandler is interface about hash handler
+type hashHandler interface {
+	// GenerateHashWithMinSalt generate & return hashed value from password with minimum salt
+	GenerateHashWithMinSalt(pw string) (hash string)
+
+	// CompareHashAndPW compare hashed value and password & return error
+	CompareHashAndPW(hash, pw string) (err error)
+}
+
 // SendCertifyCodeToPhone is implement domain.AuthUsecase interface
 func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (err error) {
 	_tx, err := au.txHandler.BeginTx(ctx, nil)
