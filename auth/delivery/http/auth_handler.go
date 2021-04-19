@@ -62,6 +62,19 @@ func (ah *authHandler) SendCertifyCodeToPhone(c *gin.Context) {
 
 func defaultResp(status, code int, msg string) interface{} {
 	return struct {
+// bindRequest method bind *gin.Context to request having BindFrom method
+func (ah *authHandler) bindRequest(req interface{ BindFrom(ctx *gin.Context) error }, c *gin.Context) error {
+	if err := req.BindFrom(c); err != nil {
+		return errors.Wrap(err, "failed to bind req")
+	}
+	if err := ah.validator.ValidateStruct(req); err != nil {
+		return errors.Wrap(err, "invalid request")
+	}
+	return nil
+	}
+
+// defaultResp return response have status, code, message inform
+func defaultResp(status, code int, msg string) (resp struct{
 		Status  int    `json:"status"`
 		Code    int    `json:"code"`
 		Message string `json:"message"`
