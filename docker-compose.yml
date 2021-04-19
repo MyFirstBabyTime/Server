@@ -1,0 +1,23 @@
+version: '3.5'
+services:
+  api-gateway:
+    image: jinhong0719/first-baby-time:${VERSION}.RELEASE
+    container_name: first-baby-time
+    networks:
+      - dms-sms-local
+    ports:
+    - target: 8000
+      published: 8000
+      protocol: tcp
+      mode: host
+    entrypoint:
+      - VERSION=${VERSION}
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels: [APP=first-baby-time]
+
+networks:
+  dms-sms-local:
+    name: dms-sms-local
+    driver: overlay
