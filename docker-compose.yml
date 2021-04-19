@@ -1,6 +1,6 @@
 version: '3.5'
 services:
-  api-gateway:
+  first-baby-time:
     image: jinhong0719/first-baby-time:${VERSION}.RELEASE
     container_name: first-baby-time
     networks:
