@@ -19,3 +19,10 @@ func NewAuthHandler(e *gin.Engine, au domain.AuthUsecase, v validator) {
 	}
 
 }
+func defaultResp(status, code int, msg string) interface{} {
+	return struct {
+		Status  int    `json:"status"`
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	}{status, code, msg}
+}
