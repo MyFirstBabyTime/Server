@@ -171,3 +171,60 @@ func (au *authUsecase) CertifyPhoneWithCode(ctx context.Context, pn string, code
 	_ = au.txHandler.Commit(_tx)
 	return nil
 }
+
+// SignUpParent is implement domain.AuthUsecase interface
+func (au *authUsecase) SignUpParent(ctx context.Context, pa *domain.ParentAuth, pn string) (err error) {
+	_tx, err := au.txHandler.BeginTx(ctx, nil)
+	if err != nil {
+		err = errors.Wrap(err, "failed to begin transaction")
+		return
+	}
+
+	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, pn)
+	if err == nil && ppc.Certified.Valid && ppc.Certified.Bool {
+		if pa.PW, err = au.hashHandler.GenerateHashWithMinSalt(pa.PW); err != nil {
+			err = internalServerErr{errors.Wrap(err, "failed to GenerateHashWithMinSalt")}
+			_ = au.txHandler.Rollback(_tx)
+			return
+		}
+		if pa.UUID, err = au.parentAuthRepository.GetAvailableUUID(_tx); err != nil {
+			pa.UUID = pa.GenerateRandomUUID()
+		}
+		switch err = au.parentAuthRepository.Store(_tx, pa); tErr := err.(type) {
+		case nil:
+			break
+		case invalidModelErr:
+			err = internalServerErr{errors.Wrap(err, "parent auth Store return invalid model")}
+			_ = au.txHandler.Rollback(_tx)
+			return
+		case entryDuplicateErr:
+			switch tErr.DuplicateKey() {
+			case "id":
+				err = conflictErr{errors.New("this parent ID is already in use"), -122}
+				_ = au.txHandler.Rollback(_tx)
+				return
+			default:
+				err = internalServerErr{errors.Wrap(err, "parent auth Store return unexpected duplicate error")}
+				_ = au.txHandler.Rollback(_tx)
+				return
+			}
+		default:
+			err = internalServerErr{errors.Wrap(err, "parent auth Store return unexpected error")}
+			_ = au.txHandler.Rollback(_tx)
+			return
+		}
+	} else {
+		if _, ok := err.(rowNotExistErr); err == nil || ok {
+			err = conflictErr{errors.New("this phone number is not certified"), -121}
+			_ = au.txHandler.Rollback(_tx)
+			return
+		} else {
+			err = internalServerErr{errors.Wrap(err, "GetByPhoneNumber return unexpected error")}
+			_ = au.txHandler.Rollback(_tx)
+			return
+		}
+	}
+
+	_ = au.txHandler.Commit(_tx)
+	return nil
+}
