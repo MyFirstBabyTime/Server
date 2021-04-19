@@ -82,7 +82,7 @@ type hashHandler interface {
 // jwtHandler is interface about JWT handler
 type jwtHandler interface {
 	// GenerateUUIDJWT generate & return JWT UUID token with type & time
-	GenerateUUIDJWT(uuid, _type string, time time.Duration) (token string, err error)
+	GenerateUUIDJWT(uuid, _type string, t time.Duration) (token string, err error)
 }
 
 // SendCertifyCodeToPhone is implement domain.AuthUsecase interface
@@ -97,7 +97,7 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 	switch err.(type) {
 	case nil:
 		if ppc.ParentUUID.Valid {
-			err = conflictErr{errors.New("this phone number is already in use"), phoneAlreadyInUse}
+			err = conflictErr(errors.New("this phone number is already in use"), phoneAlreadyInUse)
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
@@ -107,7 +107,7 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 		case nil:
 			break
 		default:
-			err = internalServerErr{errors.Wrap(err, "phone Update return unexpected error")}
+			err = internalServerErr(errors.Wrap(err, "phone Update return unexpected error"))
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
@@ -118,19 +118,19 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 		case nil:
 			break
 		default:
-			err = internalServerErr{errors.Wrap(err, "phone Store return unexpected error")}
+			err = internalServerErr(errors.Wrap(err, "phone Store return unexpected error"))
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
 	default:
-		err = internalServerErr{errors.Wrap(err, "GetByPhoneNumber return unexpected error")}
+		err = internalServerErr(errors.Wrap(err, "GetByPhoneNumber return unexpected error"))
 		_ = au.txHandler.Rollback(_tx)
 		return
 	}
 
 	content := fmt.Sprintf("[육아는 처음이지 인증 번호]\n회원가입 인증 번호: %d", ppc.CertifyCode)
 	if err = au.messageAgency.SendSMSToOne(ppc.PhoneNumber, content); err != nil {
-		err = internalServerErr{errors.Wrap(err, "SendSMSToOne return unexpected error")}
+		err = internalServerErr(errors.Wrap(err, "SendSMSToOne return unexpected error"))
 		_ = au.txHandler.Rollback(_tx)
 		return
 	}
@@ -151,12 +151,12 @@ func (au *authUsecase) CertifyPhoneWithCode(ctx context.Context, pn string, code
 	switch err.(type) {
 	case nil:
 		if ppc.Certified.Valid && ppc.Certified.Bool {
-			err = conflictErr{errors.New("this phone number is already certified"), phoneAlreadyCertified}
+			err = conflictErr(errors.New("this phone number is already certified"), phoneAlreadyCertified)
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
 		if code != ppc.CertifyCode {
-			err = conflictErr{errors.New("incorrect certify code to that phone number"), incorrectCertifyCode}
+			err = conflictErr(errors.New("incorrect certify code to that phone number"), incorrectCertifyCode)
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
@@ -165,16 +165,16 @@ func (au *authUsecase) CertifyPhoneWithCode(ctx context.Context, pn string, code
 		case nil:
 			break
 		default:
-			err = internalServerErr{errors.Wrap(err, "phone Update return unexpected error")}
+			err = internalServerErr(errors.Wrap(err, "phone Update return unexpected error"))
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
 	case rowNotExistErr:
-		err = notFoundErr{errors.New("not exist phone number")}
+		err = notFoundErr(errors.New("not exist phone number"))
 		_ = au.txHandler.Rollback(_tx)
 		return
 	default:
-		err = internalServerErr{errors.Wrap(err, "GetByPhoneNumber return unexpected error")}
+		err = internalServerErr(errors.Wrap(err, "GetByPhoneNumber return unexpected error"))
 		_ = au.txHandler.Rollback(_tx)
 		return
 	}
@@ -194,7 +194,7 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pa *domain.ParentAuth, 
 	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, pn)
 	if err == nil && ppc.Certified.Valid && ppc.Certified.Bool {
 		if pa.PW, err = au.hashHandler.GenerateHashWithMinSalt(pa.PW); err != nil {
-			err = internalServerErr{errors.Wrap(err, "failed to GenerateHashWithMinSalt")}
+			err = internalServerErr(errors.Wrap(err, "failed to GenerateHashWithMinSalt"))
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
@@ -205,32 +205,32 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pa *domain.ParentAuth, 
 		case nil:
 			break
 		case invalidModelErr:
-			err = internalServerErr{errors.Wrap(err, "parent auth Store return invalid model")}
+			err = internalServerErr(errors.Wrap(err, "parent auth Store return invalid model"))
 			_ = au.txHandler.Rollback(_tx)
 			return
 		case entryDuplicateErr:
 			switch tErr.DuplicateKey() {
 			case "id":
-				err = conflictErr{errors.New("this parent ID is already in use"), parentIDAlreadyInUse}
+				err = conflictErr(errors.New("this parent ID is already in use"), parentIDAlreadyInUse)
 				_ = au.txHandler.Rollback(_tx)
 				return
 			default:
-				err = internalServerErr{errors.Wrap(err, "parent auth Store return unexpected duplicate error")}
+				err = internalServerErr(errors.Wrap(err, "parent auth Store return unexpected duplicate error"))
 				_ = au.txHandler.Rollback(_tx)
 				return
 			}
 		default:
-			err = internalServerErr{errors.Wrap(err, "parent auth Store return unexpected error")}
+			err = internalServerErr(errors.Wrap(err, "parent auth Store return unexpected error"))
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
 	} else {
 		if _, ok := err.(rowNotExistErr); err == nil || ok {
-			err = conflictErr{errors.New("this phone number is not certified"), uncertifiedPhone}
+			err = conflictErr(errors.New("this phone number is not certified"), uncertifiedPhone)
 			_ = au.txHandler.Rollback(_tx)
 			return
 		} else {
-			err = internalServerErr{errors.Wrap(err, "GetByPhoneNumber return unexpected error")}
+			err = internalServerErr(errors.Wrap(err, "GetByPhoneNumber return unexpected error"))
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
@@ -255,26 +255,26 @@ func (au *authUsecase) LoginParentAuth(ctx context.Context, id, pw string) (uuid
 		case nil:
 			break
 		case interface{ Mismatch() }:
-			err = conflictErr{errors.New("incorrect password"), incorrectParentPW}
+			err = conflictErr(errors.New("incorrect password"), incorrectParentPW)
 			_ = au.txHandler.Rollback(_tx)
 			return
 		default:
-			err = internalServerErr{errors.Wrap(err, "CompareHashAndPW return unexpected error")}
+			err = internalServerErr(errors.Wrap(err, "CompareHashAndPW return unexpected error"))
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
 	case rowNotExistErr:
-		err = conflictErr{errors.New("not exist parent ID"), notExistParentID}
+		err = conflictErr(errors.New("not exist parent ID"), notExistParentID)
 		_ = au.txHandler.Rollback(_tx)
 		return
 	default:
-		err = internalServerErr{errors.Wrap(err, "GetByID return unexpected error")}
+		err = internalServerErr(errors.Wrap(err, "GetByID return unexpected error"))
 		_ = au.txHandler.Rollback(_tx)
 		return
 	}
 
 	uuid = pa.UUID
-	token, err = au.jwtHandler.GenerateUUIDJWT(pa.UUID, "access_token", time.Hour*24)
+	token, err = au.jwtHandler.GenerateUUIDJWT(pa.UUID, "access_token", time.Hour*24) // get time from config
 	err = nil
 
 	_ = au.txHandler.Commit(_tx)
