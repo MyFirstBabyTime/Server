@@ -19,14 +19,14 @@ type validator interface {
 }
 
 // NewAuthHandler will initialize the auth/ resources endpoint
-func NewAuthHandler(e *gin.Engine, au domain.AuthUsecase, v validator) {
+func NewAuthHandler(r *gin.Engine, au domain.AuthUsecase, v validator) {
 	h := &authHandler{
 		aUsecase:  au,
 		validator: v,
 	}
 
-	e.POST("phones/phone-number/:phone_number/certify-code", h.SendCertifyCodeToPhone)
-	//e.GET("/articles/:id", handler.GetByID)
+	r.POST("phones/phone-number/:phone_number/certify-code", h.SendCertifyCodeToPhone)
+	r.POST("phones/phone-number/:phone_number/certification", h.CertifyPhoneWithCode)
 }
 
 // SendCertifyCodeToPhone is implement domain.AuthUsecase interface
