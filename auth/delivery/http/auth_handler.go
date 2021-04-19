@@ -27,7 +27,6 @@ func NewAuthHandler(e *gin.Engine, au domain.AuthUsecase, v validator) {
 
 	e.POST("phones/phone-number/:phone_number/certify-code", h.SendCertifyCodeToPhone)
 	//e.GET("/articles/:id", handler.GetByID)
-	//e.DELETE("/articles/:id", handler.Delete)
 }
 
 // SendCertifyCodeToPhone is implement domain.AuthUsecase interface
@@ -35,13 +34,6 @@ func (ah *authHandler) SendCertifyCodeToPhone(c *gin.Context) {
 	req := new(sendCertifyCodeToPhoneRequest)
 	if err := ah.bindRequest(req, c); err != nil {
 		c.JSON(http.StatusBadRequest, defaultResp(http.StatusBadRequest, 0, err.Error()))
-		c.JSON(http.StatusUnprocessableEntity, resp)
-		return
-	}
-
-	if err := ah.validator.ValidateStruct(req); err != nil {
-		resp := defaultResp(http.StatusBadRequest, 0, errors.Wrap(err, "invalid request").Error())
-		c.JSON(http.StatusBadRequest, resp)
 		return
 	}
 
@@ -60,8 +52,27 @@ func (ah *authHandler) SendCertifyCodeToPhone(c *gin.Context) {
 	return
 }
 
-func defaultResp(status, code int, msg string) interface{} {
-	return struct {
+// CertifyPhoneWithCode is implement domain.AuthUsecase interface
+func (ah *authHandler) CertifyPhoneWithCode(c *gin.Context) {
+	req := new(certifyPhoneWithCodeRequest)
+	if err := ah.bindRequest(req, c); err != nil {
+		c.JSON(http.StatusBadRequest, defaultResp(http.StatusBadRequest, 0, err.Error()))
+		return
+	}
+
+	switch err := ah.aUsecase.CertifyPhoneWithCode(c.Request.Context(), req.PhoneNumber, req.CertifyCode); tErr := err.(type) {
+	case nil:
+		resp := defaultResp(http.StatusOK, 0, "succeed to send certify code to phone")
+		c.JSON(http.StatusOK, resp)
+	case usecaseErr:
+		c.JSON(tErr.Status(), defaultResp(tErr.Status(), tErr.Code(), tErr.Error()))
+	default:
+		msg := errors.Wrap(err, "CertifyPhoneWithCode return unexpected error").Error()
+		c.JSON(http.StatusInternalServerError, defaultResp(http.StatusInternalServerError, 0, msg))
+	}
+	return
+}
+
 // bindRequest method bind *gin.Context to request having BindFrom method
 func (ah *authHandler) bindRequest(req interface{ BindFrom(ctx *gin.Context) error }, c *gin.Context) error {
 	if err := req.BindFrom(c); err != nil {
@@ -71,13 +82,13 @@ func (ah *authHandler) bindRequest(req interface{ BindFrom(ctx *gin.Context) err
 		return errors.Wrap(err, "invalid request")
 	}
 	return nil
-	}
+}
 
 // defaultResp return response have status, code, message inform
 func defaultResp(status, code int, msg string) (resp struct{
-		Status  int    `json:"status"`
-		Code    int    `json:"code"`
-		Message string `json:"message"`
+	Status  int    `json:"status"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
 }) {
 	resp.Status, resp.Code, resp.Message = status, code, msg
 	return
