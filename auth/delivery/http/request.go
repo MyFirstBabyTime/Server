@@ -42,3 +42,12 @@ type signUpParentRequest struct {
 func (r *signUpParentRequest) BindFrom(c *gin.Context) error {
 	return errors.Wrap(c.BindJSON(r), "failed to BindJSON")
 }
+
+type loginParentAuthRequest struct {
+	ID string `json:"id" validate:"required"`
+	PW string `json:"pw" validate:"required"`
+}
+
+func (r *loginParentAuthRequest) BindFrom(c *gin.Context) error {
+	return errors.Wrap(c.BindJSON(r), "failed to BindJSON")
+}
