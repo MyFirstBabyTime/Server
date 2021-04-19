@@ -30,3 +30,15 @@ func (r *certifyPhoneWithCodeRequest) BindFrom(c *gin.Context) error {
 	}
 	return nil
 }
+
+// signUpParentRequest is request for authHandler.SignUpParent
+type signUpParentRequest struct {
+	ID          string `json:"id" validate:"required,min=4,max=20"`
+	PW          string `json:"pw" validate:"required,min=6,max=20"`
+	Name        string `json:"name" validate:"required,max=10"`
+	PhoneNumber string `json:"phone_number" validate:"required,len=11"`
+}
+
+func (r *signUpParentRequest) BindFrom(c *gin.Context) error {
+	return errors.Wrap(c.BindJSON(r), "failed to BindJSON")
+}
