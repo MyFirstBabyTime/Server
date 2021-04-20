@@ -12,6 +12,15 @@ services:
       mode: host
     environment:
       - VERSION=${VERSION}
+      - CONFIG_FILE=${CONFIG_FILE}
+      - MYSQL_USERNAME=${MYSQL_USERNAME}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ADDRESS=${MYSQL_ADDRESS}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - ALIGO_API_KEY=${ALIGO_API_KEY}
+      - ALIGO_ACCOUNT_ID=${ALIGO_ACCOUNT_ID}
+      - ALIGO_SENDER=${ALIGO_SENDER}
+      - JWT_KEY=${JWT_KEY}
     deploy:
       mode: replicated
       replicas: 1
