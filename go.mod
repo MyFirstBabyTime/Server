@@ -6,7 +6,6 @@ require (
 	github.com/Masterminds/squirrel v1.5.0
 	github.com/VividCortex/mysqlerr v0.0.0-20201215173831-4c396ae82aac
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.1
 	github.com/go-playground/validator/v10 v10.4.1
 	github.com/go-sql-driver/mysql v1.5.1-0.20200311113236-681ffa848bae
