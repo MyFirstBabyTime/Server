@@ -21,6 +21,18 @@ type appConfig struct {
 
 	// mysqlDataSource represent data source name of MySQL
 	mysqlDataSource *string
+
+	// configFile represent aligo api key
+	aligoAPIKey *string
+
+	// configFile represent aligo account ID
+	aligoAccountID *string
+
+	// configFile represent aligo sender
+	aligoSender *string
+
+	// jwtKey represent jwt key
+	jwtKey *string
 }
 
 // ConfigFile return config file get from environment variable
@@ -73,6 +85,61 @@ func (ac *appConfig) MysqlDataSource() string {
 
 	ac.mysqlDataSource = _string(fmt.Sprintf(format, args...))
 	return *ac.mysqlDataSource
+}
+
+// AligoAPIKey return aligo api key get from environment variable
+func (ac *appConfig) AligoAPIKey() string {
+	if ac.aligoAPIKey != nil {
+		return *ac.aligoAPIKey
+	}
+
+	if viper.IsSet("ALIGO_API_KEY") {
+		ac.aligoAPIKey = _string(viper.GetString("ALIGO_API_KEY"))
+	} else {
+		log.Fatal("please set ALIGO_API_KEY in environment variable")
+	}
+	return *ac.aligoAPIKey
+}
+
+// AligoAccountID return aligo account ID key get from environment variable
+func (ac *appConfig) AligoAccountID() string {
+	if ac.aligoAccountID != nil {
+		return *ac.aligoAccountID
+	}
+
+	if viper.IsSet("ALIGO_ACCOUNT_ID") {
+		ac.aligoAccountID = _string(viper.GetString("ALIGO_ACCOUNT_ID"))
+	} else {
+		log.Fatal("please set ALIGO_ACCOUNT_ID in environment variable")
+	}
+	return *ac.aligoAccountID
+}
+
+// AligoSender return aligo sender  get from environment variable
+func (ac *appConfig) AligoSender() string {
+	if ac.aligoSender != nil {
+		return *ac.aligoSender
+	}
+
+	if viper.IsSet("ALIGO_SENDER") {
+		ac.aligoSender = _string(viper.GetString("ALIGO_SENDER"))
+	} else {
+		log.Fatal("please set ALIGO_SENDER in environment variable")
+	}
+	return *ac.aligoSender
+}
+// JwtKey return jwt key get from environment variable
+func (ac *appConfig) JwtKey() string {
+	if ac.jwtKey != nil {
+		return *ac.jwtKey
+	}
+
+	if viper.IsSet("JWT_KEY") {
+		ac.jwtKey = _string(viper.GetString("JWT_KEY"))
+	} else {
+		log.Fatal("please set JWT_KEY in environment variable")
+	}
+	return *ac.jwtKey
 }
 
 func _string(s string) *string { return &s }
