@@ -10,4 +10,4 @@ app:
   JWT_KEY:
 
 auth:
-  accessTokenDuration: "1h"
+  accessTokenDuration: "24h"
