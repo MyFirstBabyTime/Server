@@ -13,6 +13,9 @@ import (
 
 // authUsecase is used for usecase layer which implement domain.AuthUsecase interface
 type authUsecase struct {
+	// myCfg is used for get config value for auth usecase
+	myCfg authUsecaseConfig
+
 	// parentAuthRepository is repository interface about domain.ParentAuth model
 	parentAuthRepository domain.ParentAuthRepository
 
@@ -34,6 +37,7 @@ type authUsecase struct {
 
 // AuthUsecase return implementation of domain.AuthUsecase
 func AuthUsecase(
+	cfg authUsecaseConfig,
 	par domain.ParentAuthRepository,
 	ppr domain.ParentPhoneCertifyRepository,
 	th txHandler,
@@ -42,6 +46,8 @@ func AuthUsecase(
 	jh jwtHandler,
 ) domain.AuthUsecase {
 	return &authUsecase{
+		myCfg: cfg,
+
 		parentAuthRepository:         par,
 		parentPhoneCertifyRepository: ppr,
 
@@ -50,6 +56,12 @@ func AuthUsecase(
 		hashHandler:   hh,
 		jwtHandler:    jh,
 	}
+}
+
+// authUsecaseConfig is interface get config value for auth usecase
+type authUsecaseConfig interface {
+	// AccessTokenDuration return access token valid duration
+	AccessTokenDuration() time.Duration
 }
 
 // txHandler is used for handling transaction to begin & commit or rollback
@@ -286,7 +298,7 @@ func (au *authUsecase) LoginParentAuth(ctx context.Context, id, pw string) (uuid
 	}
 
 	uuid = pa.UUID
-	token, err = au.jwtHandler.GenerateUUIDJWT(pa.UUID, "access_token", time.Hour*24) // get time from config
+	token, err = au.jwtHandler.GenerateUUIDJWT(pa.UUID, "access_token", au.myCfg.AccessTokenDuration())
 	err = nil
 
 	_ = au.txHandler.Commit(_tx)

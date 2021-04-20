@@ -15,11 +15,16 @@ import (
 
 // parentAuthRepository is implementation of domain.ParentAuthRepository using mysql
 type parentAuthRepository struct {
+	myCfg parentAuthRepositoryConfig
+
 	db           *sqlx.DB
 	migrator     migrator
 	sqlMsgParser sqlMsgParser
 	validator    validator
 }
+
+// parentAuthRepositoryConfig is interface get config value for parent auth repository
+type parentAuthRepositoryConfig interface {}
 
 // sqlMsgParser is interface used for parse sql result message
 type sqlMsgParser interface {
@@ -33,8 +38,14 @@ type validator interface {
 }
 
 // ParentAuthRepository return implementation of domain.ParentAuthRepository using mysql
-func ParentAuthRepository(db *sqlx.DB, sp sqlMsgParser, v validator) domain.ParentAuthRepository {
+func ParentAuthRepository(
+	cfg parentAuthRepositoryConfig,
+	db *sqlx.DB,
+	sp sqlMsgParser,
+	v validator,
+) domain.ParentAuthRepository {
 	repo := &parentAuthRepository{
+		myCfg:        cfg,
 		db:           db,
 		sqlMsgParser: sp,
 		validator:    v,

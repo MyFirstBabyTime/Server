@@ -15,6 +15,8 @@ import (
 
 // parentPhoneCertifyRepository is implementation of domain.AuthRepository using mysql
 type parentPhoneCertifyRepository struct {
+	myCfg parentPhoneCertifyRepositoryConfig
+
 	db           *sqlx.DB
 	migrator     migrator
 	sqlMsgParser sqlMsgParser
@@ -22,8 +24,14 @@ type parentPhoneCertifyRepository struct {
 }
 
 // ParentPhoneCertifyRepository return implementation of domain.ParentPhoneCertifyRepository using mysql
-func ParentPhoneCertifyRepository(db *sqlx.DB, sp sqlMsgParser, v validator) domain.ParentPhoneCertifyRepository {
+func ParentPhoneCertifyRepository(
+	cfg parentPhoneCertifyRepositoryConfig,
+	db *sqlx.DB,
+	sp sqlMsgParser,
+	v validator,
+) domain.ParentPhoneCertifyRepository {
 	repo := &parentPhoneCertifyRepository{
+		myCfg:        cfg,
 		db:           db,
 		sqlMsgParser: sp,
 		validator:    v,
@@ -34,6 +42,9 @@ func ParentPhoneCertifyRepository(db *sqlx.DB, sp sqlMsgParser, v validator) dom
 	}
 	return repo
 }
+
+// parentPhoneCertifyRepositoryConfig is interface get config value for parent phone certify repository
+type parentPhoneCertifyRepositoryConfig interface {}
 
 // GetByPhoneNumber is implement domain.ParentPhoneCertifyRepository interface
 func (pp *parentPhoneCertifyRepository) GetByPhoneNumber(ctx tx.Context, pn string) (ppc domain.ParentPhoneCertify, err error) {

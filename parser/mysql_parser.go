@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -12,7 +13,9 @@ func MysqlMsgParser() *mysqlMsgParser { return new(mysqlMsgParser) }
 // EntryDuplicate method parse & return entry, key from mysql entry duplicate error message
 func (mp *mysqlMsgParser) EntryDuplicate(msg string) (entry, key string) {
 	// Ex) Duplicate entry 'testID' for key 'id' -> Duplicate entry testID for key id
-	msg = strings.ReplaceAll(msg, "'", "")
+	msg = regexp.MustCompile("'.*?'").ReplaceAllStringFunc(msg, func(s string) string {
+		return strings.ReplaceAll(strings.ReplaceAll(s, "'", ""), " ", "")
+	})
 
 	if _, err := fmt.Sscanf(msg, "Duplicate entry %s for key %s", &entry, &key); err != nil {
 		entry, key = "", ""

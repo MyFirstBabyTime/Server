@@ -12,6 +12,17 @@ services:
       mode: host
     environment:
       - VERSION=${VERSION}
+      - FIRST_BABY_TIME_CONFIG_FILE=${FIRST_BABY_TIME_CONFIG_FILE}
+      - MYSQL_USERNAME=${MYSQL_USERNAME}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ADDRESS=${MYSQL_ADDRESS}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - ALIGO_API_KEY=${ALIGO_API_KEY}
+      - ALIGO_ACCOUNT_ID=${ALIGO_ACCOUNT_ID}
+      - ALIGO_SENDER=${ALIGO_SENDER}
+      - JWT_KEY=${JWT_KEY}
+    volumes:
+      - ./config.yaml:/usr/share/first-baby-time/config.yaml
     deploy:
       mode: replicated
       replicas: 1
