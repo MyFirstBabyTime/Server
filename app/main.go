@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/MyFirstBabyTime/Server/app/config"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -41,6 +42,12 @@ func main() {
 	}
 
 	r := gin.Default()
+
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowAllOrigins = true
+	corsConfig.AllowHeaders = append(corsConfig.AllowHeaders, "Authorization", "authorization", "Request-Security")
+
+	r.Use(cors.New(corsConfig))
 
 	_ps := parser.MysqlMsgParser()
 	_vl := validate.New()
