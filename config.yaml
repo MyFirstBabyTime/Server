@@ -1,0 +1,13 @@
+app:
+  # set value in environment variable
+  MYSQL_USERNAME:
+  MYSQL_PASSWORD:
+  MYSQL_ADDRESS:
+  MYSQL_DATABASE:
+  ALIGO_API_KEY:
+  ALIGO_ACCOUNT_ID:
+  ALIGO_SENDER:
+  JWT_KEY:
+
+auth:
+  accessTokenDuration: "1h"
