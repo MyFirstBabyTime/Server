@@ -41,10 +41,10 @@ func (ac *appConfig) ConfigFile() string {
 		return *ac.configFile
 	}
 
-	if viper.IsSet("CONFIG_FILE") {
-		ac.configFile = _string(viper.GetString("CONFIG_FILE"))
+	if viper.IsSet("FIRST_BABY_TIME_CONFIG_FILE") {
+		ac.configFile = _string(viper.GetString("FIRST_BABY_TIME_CONFIG_FILE"))
 	} else {
-		log.Fatal("please set CONFIG_FILE in environment variable")
+		log.Fatal("please set FIRST_BABY_TIME_CONFIG_FILE in environment variable")
 	}
 	return *ac.configFile
 }
