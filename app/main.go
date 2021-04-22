@@ -48,6 +48,11 @@ func main() {
 	corsConfig.AllowHeaders = append(corsConfig.AllowHeaders, "Authorization", "authorization", "Request-Security")
 
 	r.Use(cors.New(corsConfig))
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "pong2",
+		})
+	})
 
 	_ps := parser.MysqlMsgParser()
 	_vl := validate.New()
@@ -64,5 +69,5 @@ func main() {
 	)
 	_authHttpDelivery.NewAuthHandler(r, au, _vl)
 
-	log.Fatal(r.Run(":8000"))
+	log.Fatal(r.Run(":80"))
 }
