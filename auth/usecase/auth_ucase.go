@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/pkg/errors"
+	"net/http"
 	"time"
 
 	"github.com/MyFirstBabyTime/Server/domain"
@@ -109,7 +110,8 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 	switch err.(type) {
 	case nil:
 		if ppc.ParentUUID.Valid {
-			err = conflictErr(errors.New("this phone number is already in use"), phoneAlreadyInUse)
+			err = errors.New("this phone number is already in use")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusConflict, Code: domain.PhoneAlreadyInUse}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
@@ -119,30 +121,34 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 		case nil:
 			break
 		default:
-			err = internalServerErr(errors.Wrap(err, "phone Update return unexpected error"))
+			err = errors.Wrap(err, "phone Update return unexpected error")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
-	case rowNotExistErr:
+	case domain.ErrRowNotExist:
 		ppc = domain.ParentPhoneCertify{PhoneNumber: pn}
 		ppc.CertifyCode = ppc.GenerateCertifyCode()
 		switch err = au.parentPhoneCertifyRepository.Store(_tx, &ppc); err.(type) {
 		case nil:
 			break
 		default:
-			err = internalServerErr(errors.Wrap(err, "phone Store return unexpected error"))
+			err = errors.Wrap(err, "phone Store return unexpected error")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
 	default:
-		err = internalServerErr(errors.Wrap(err, "GetByPhoneNumber return unexpected error"))
+		err = errors.Wrap(err, "GetByPhoneNumber return unexpected error")
+		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 		_ = au.txHandler.Rollback(_tx)
 		return
 	}
 
 	content := fmt.Sprintf("[육아는 처음이지 인증 번호]\n회원가입 인증 번호: %d", ppc.CertifyCode)
 	if err = au.messageAgency.SendSMSToOne(ppc.PhoneNumber, content); err != nil {
-		err = internalServerErr(errors.Wrap(err, "SendSMSToOne return unexpected error"))
+		err = errors.Wrap(err, "SendSMSToOne return unexpected error")
+		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 		_ = au.txHandler.Rollback(_tx)
 		return
 	}
@@ -163,12 +169,14 @@ func (au *authUsecase) CertifyPhoneWithCode(ctx context.Context, pn string, code
 	switch err.(type) {
 	case nil:
 		if ppc.Certified.Valid && ppc.Certified.Bool {
-			err = conflictErr(errors.New("this phone number is already certified"), phoneAlreadyCertified)
+			err = errors.New("this phone number is already certified")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusConflict, Code: domain.PhoneAlreadyCertified}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
 		if code != ppc.CertifyCode {
-			err = conflictErr(errors.New("incorrect certify code to that phone number"), incorrectCertifyCode)
+			err = errors.New("incorrect certify code to that phone number")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusConflict, Code: domain.IncorrectCertifyCode}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
@@ -177,16 +185,19 @@ func (au *authUsecase) CertifyPhoneWithCode(ctx context.Context, pn string, code
 		case nil:
 			break
 		default:
-			err = internalServerErr(errors.Wrap(err, "phone Update return unexpected error"))
+			err = errors.Wrap(err, "phone Update return unexpected error")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
-	case rowNotExistErr:
-		err = notFoundErr(errors.New("not exist phone number"))
+	case domain.ErrRowNotExist:
+		err = errors.New("not exist phone number")
+		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusNotFound}
 		_ = au.txHandler.Rollback(_tx)
 		return
 	default:
-		err = internalServerErr(errors.Wrap(err, "GetByPhoneNumber return unexpected error"))
+		err = errors.Wrap(err, "GetByPhoneNumber return unexpected error")
+		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 		_ = au.txHandler.Rollback(_tx)
 		return
 	}
@@ -206,12 +217,14 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pa *domain.ParentAuth, 
 	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, pn)
 	if err == nil && ppc.Certified.Valid && ppc.Certified.Bool {
 		if ppc.ParentUUID.Valid {
-			err = conflictErr(errors.New("this phone number is already in use"), phoneAlreadyInUse)
+			err = errors.New("this phone number is already in use")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusConflict, Code: domain.PhoneAlreadyInUse}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
 		if pa.PW, err = au.hashHandler.GenerateHashWithMinSalt(pa.PW); err != nil {
-			err = internalServerErr(errors.Wrap(err, "failed to GenerateHashWithMinSalt"))
+			err = errors.Wrap(err, "failed to GenerateHashWithMinSalt")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
@@ -221,33 +234,39 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pa *domain.ParentAuth, 
 		switch err = au.parentAuthRepository.Store(_tx, pa); tErr := err.(type) {
 		case nil:
 			break
-		case invalidModelErr:
-			err = internalServerErr(errors.Wrap(err, "parent auth Store return invalid model"))
+		case domain.ErrInvalidModel:
+			err = errors.Wrap(err, "parent auth Store return invalid model")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 			_ = au.txHandler.Rollback(_tx)
 			return
-		case entryDuplicateErr:
-			switch tErr.DuplicateKey() {
+		case domain.ErrEntryDuplicate:
+			switch tErr.DuplicateKey {
 			case "id":
-				err = conflictErr(errors.New("this parent ID is already in use"), parentIDAlreadyInUse)
+				err = errors.New("this parent ID is already in use")
+				err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusConflict, Code: domain.ParentIDAlreadyInUse}
 				_ = au.txHandler.Rollback(_tx)
 				return
 			default:
-				err = internalServerErr(errors.Wrap(err, "parent auth Store return unexpected duplicate error"))
+				err = errors.Wrap(err, "parent auth Store return unexpected duplicate error")
+				err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 				_ = au.txHandler.Rollback(_tx)
 				return
 			}
 		default:
-			err = internalServerErr(errors.Wrap(err, "parent auth Store return unexpected error"))
+			err = errors.Wrap(err, "parent auth Store return unexpected error")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
 	} else {
-		if _, ok := err.(rowNotExistErr); err == nil || ok {
-			err = conflictErr(errors.New("this phone number is not certified"), uncertifiedPhone)
+		if _, ok := err.(domain.ErrRowNotExist); err == nil || ok {
+			err = errors.New("this phone number is not certified")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusConflict, Code: domain.UncertifiedPhone}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		} else {
-			err = internalServerErr(errors.Wrap(err, "GetByPhoneNumber return unexpected error"))
+			err = errors.Wrap(err, "GetByPhoneNumber return unexpected error")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
@@ -255,7 +274,8 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pa *domain.ParentAuth, 
 
 	ppc.ParentUUID = sql.NullString{String: pa.UUID, Valid: true}
 	if err = au.parentPhoneCertifyRepository.Update(_tx, &ppc); err != nil {
-		err = internalServerErr(errors.Wrap(err, "phone Update return unexpected error"))
+		err = errors.Wrap(err, "phone Update return unexpected error")
+		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 		_ = au.txHandler.Rollback(_tx)
 		return
 	}
@@ -279,20 +299,24 @@ func (au *authUsecase) LoginParentAuth(ctx context.Context, id, pw string) (uuid
 		case nil:
 			break
 		case interface{ Mismatch() }:
-			err = conflictErr(errors.New("incorrect password"), incorrectParentPW)
+			err = errors.New("incorrect password")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusConflict, Code: domain.IncorrectParentPW}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		default:
-			err = internalServerErr(errors.Wrap(err, "CompareHashAndPW return unexpected error"))
+			err = errors.Wrap(err, "CompareHashAndPW return unexpected error")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
-	case rowNotExistErr:
-		err = conflictErr(errors.New("not exist parent ID"), notExistParentID)
+	case domain.ErrRowNotExist:
+		err = errors.New("not exist parent ID")
+		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusConflict, Code: domain.NotExistParentID}
 		_ = au.txHandler.Rollback(_tx)
 		return
 	default:
-		err = internalServerErr(errors.Wrap(err, "GetByID return unexpected error"))
+		err = errors.Wrap(err, "GetByID return unexpected error")
+		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 		_ = au.txHandler.Rollback(_tx)
 		return
 	}

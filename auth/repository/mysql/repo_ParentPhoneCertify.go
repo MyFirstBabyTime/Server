@@ -55,7 +55,7 @@ func (pp *parentPhoneCertifyRepository) GetByPhoneNumber(ctx tx.Context, pn stri
 	case nil:
 		break
 	case sql.ErrNoRows:
-		err = rowNotExistErr{errors.Wrap(err, "failed to select parent phone certify")}
+		err = domain.ErrRowNotExist{RepoErr: errors.Wrap(err, "failed to select parent phone certify")}
 	default:
 		err = errors.Wrap(err, "select parent phone certify return unexpected error")
 	}
@@ -69,7 +69,7 @@ func (pp *parentPhoneCertifyRepository) Store(ctx tx.Context, ppc *domain.Parent
 	}
 
 	if err = pp.validator.ValidateStruct(ppc); err != nil {
-		err = invalidModelErr{errors.Wrap(err, "failed to validate domain.ParentPhoneCertify")}
+		err = domain.ErrInvalidModel{RepoErr: errors.Wrap(err, "failed to validate domain.ParentPhoneCertify")}
 		return
 	}
 
@@ -86,11 +86,11 @@ func (pp *parentPhoneCertifyRepository) Store(ctx tx.Context, ppc *domain.Parent
 		case mysqlerr.ER_DUP_ENTRY:
 			err = errors.Wrap(err, "failed to insert parent phone certify")
 			_, key := pp.sqlMsgParser.EntryDuplicate(tErr.Message)
-			err = entryDuplicateErr{err, key}
+			err = domain.ErrEntryDuplicate{RepoErr: err, DuplicateKey: key}
 		case mysqlerr.ER_NO_REFERENCED_ROW_2:
 			err = errors.Wrap(err, "failed to insert parent phone certify")
 			fk := pp.sqlMsgParser.NoReferencedRow(tErr.Message)
-			err = noReferencedRowErr{err, fk}
+			err = domain.ErrNoReferencedRow{RepoErr: err, ForeignKey: fk}
 		default:
 			err = errors.Wrap(err, "insert parent auth return unexpected code return")
 		}
@@ -109,7 +109,7 @@ func (pp *parentPhoneCertifyRepository) Update(ctx tx.Context, ppc *domain.Paren
 	}
 
 	if err = pp.validator.ValidateStruct(ppc.GenerateValidModel()); err != nil {
-		err = invalidModelErr{errors.Wrap(err, "failed to validate domain.ParentPhoneCertify")}
+		err = domain.ErrInvalidModel{RepoErr: errors.Wrap(err, "failed to validate domain.ParentPhoneCertify")}
 		return
 	}
 
@@ -127,7 +127,7 @@ func (pp *parentPhoneCertifyRepository) Update(ctx tx.Context, ppc *domain.Paren
 	_tx, _ := ctx.Tx().(*sqlx.Tx)
 	_sql, args, err := b.ToSql()
 	if err != nil {
-		err = invalidModelErr{errors.New("update statements must have at least one")}
+		err = domain.ErrInvalidModel{RepoErr: errors.New("update statements must have at least one")}
 		return
 	}
 
@@ -139,7 +139,7 @@ func (pp *parentPhoneCertifyRepository) Update(ctx tx.Context, ppc *domain.Paren
 		case mysqlerr.ER_NO_REFERENCED_ROW_2:
 			err = errors.Wrap(err, "failed to update parent phone certify")
 			fk := pp.sqlMsgParser.NoReferencedRow(tErr.Message)
-			err = noReferencedRowErr{err, fk}
+			err = domain.ErrNoReferencedRow{RepoErr: err, ForeignKey: fk}
 		default:
 			err = errors.Wrap(err, "update parent auth return unexpected code return")
 		}
