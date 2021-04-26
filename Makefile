@@ -11,6 +11,13 @@ image:
 upload:
 	docker push mspring03/first-baby-time:${VERSION}.RELEASE
 
-.PHONY: stack
-stack:
-	env VERSION=${VERSION} docker stack deploy -c docker-compose.yml DSM_SMS
+.PHONY: deploy
+deploy:
+	curl -X POST -H "User-Agent: linux bla bla" -H "Content-Type: application/json" \
+	-d " \
+	{ \
+	 \"cloud_management_key\":\"dbaudcjf3116\", \
+	 \"image\":\"mspring03/first-baby-time:1.0.0.RELEASE\"\
+	} \
+	" \
+	http://54.180.121.144:80/redeploy
