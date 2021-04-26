@@ -72,5 +72,10 @@ func main() {
 	)
 	_authHttpDelivery.NewAuthHandler(r, au, _vl)
 
+	cmu := _cloudMaintainerUsecase.CloudMaintainerUsecase(
+		config.App.CloudManagementKey(),
+	)
+	_cloudMaintainerDelivery.NewCloudMaintainerHandler(r, cmu, _vl)
+
 	log.Fatal(r.Run(":80"))
 }
