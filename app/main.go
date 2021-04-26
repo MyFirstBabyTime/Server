@@ -21,6 +21,9 @@ import (
 	_authHttpDelivery "github.com/MyFirstBabyTime/Server/auth/delivery/http"
 	_authRepo "github.com/MyFirstBabyTime/Server/auth/repository/mysql"
 	_authUcase "github.com/MyFirstBabyTime/Server/auth/usecase"
+
+	_cloudMaintainerDelivery "github.com/MyFirstBabyTime/Server/cloud-maintainer/delivery/http"
+	_cloudMaintainerUsecase "github.com/MyFirstBabyTime/Server/cloud-maintainer/usecase"
 )
 
 func init() {
