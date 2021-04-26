@@ -1,10 +1,8 @@
 version: '3.5'
 services:
-  first-baby-time:
-    image: jinhong0719/first-baby-time:${VERSION}.RELEASE
-    container_name: first-baby-time
-    networks:
-      - dms-sms-local
+  server:
+    image: mspring03/first-baby-time:${VERSION}.RELEASE
+    container_name: server
     ports:
     - target: 8000
       published: 8000
