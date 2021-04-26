@@ -4,8 +4,8 @@ services:
     image: mspring03/first-baby-time:${VERSION}.RELEASE
     container_name: server
     ports:
-    - target: 8000
-      published: 8000
+    - target: 80
+      published: 80
       protocol: tcp
       mode: host
     environment:
