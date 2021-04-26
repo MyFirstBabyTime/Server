@@ -5,7 +5,7 @@ build:
 .PHONY: image
 image:
 	docker build . -t first-baby-time:${VERSION}
-	docker tag first-baby-time:${VERSION} jinhong0719/first-baby-time:${VERSION}.RELEASE
+	docker tag first-baby-time:${VERSION} mspring03/first-baby-time:${VERSION}.RELEASE
 
 .PHONY: upload
 upload:
