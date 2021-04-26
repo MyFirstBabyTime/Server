@@ -19,6 +19,7 @@ services:
       - ALIGO_ACCOUNT_ID=${ALIGO_ACCOUNT_ID}
       - ALIGO_SENDER=${ALIGO_SENDER}
       - JWT_KEY=${JWT_KEY}
+      - CLOUD_MANAGEMENT_KEY=${CLOUD_MANAGEMENT_KEY}
     volumes:
       - ./config.yaml:/usr/share/first-baby-time/config.yaml
     deploy:
