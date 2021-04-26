@@ -9,7 +9,7 @@ image:
 
 .PHONY: upload
 upload:
-	docker push jinhong0719/first-baby-time:${VERSION}.RELEASE
+	docker push mspring03/first-baby-time:${VERSION}.RELEASE
 
 .PHONY: stack
 stack:
