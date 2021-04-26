@@ -21,13 +21,15 @@ services:
       - JWT_KEY=${JWT_KEY}
       - CLOUD_MANAGEMENT_KEY=${CLOUD_MANAGEMENT_KEY}
     volumes:
-      - ./config.yaml:/usr/share/first-baby-time/config.yaml
+      - /Users/yumyeongcheol/Desktop/mspring03/project/Server/config.yaml:/usr/share/first-baby-time/config.yaml
+      - /var/run/docker.sock:/var/run/docker.sock
     deploy:
       mode: replicated
       replicas: 1
-      labels: [APP=first-baby-time]
-
-networks:
-  dms-sms-local:
-    name: dms-sms-local
-    driver: overlay
+      update_config:
+        parallelism: 1
+        failure_action: rollback
+#networks:
+#  dms-sms-local:
+#    name: dms-sms-local
+#    driver: overlay
