@@ -1,13 +1,11 @@
 version: '3.5'
 services:
-  first-baby-time:
-    image: jinhong0719/first-baby-time:${VERSION}.RELEASE
-    container_name: first-baby-time
-    networks:
-      - dms-sms-local
+  server:
+    image: mspring03/first-baby-time:${VERSION}.RELEASE
+    container_name: server
     ports:
-    - target: 8000
-      published: 8000
+    - target: 80
+      published: 80
       protocol: tcp
       mode: host
     environment:
@@ -21,14 +19,17 @@ services:
       - ALIGO_ACCOUNT_ID=${ALIGO_ACCOUNT_ID}
       - ALIGO_SENDER=${ALIGO_SENDER}
       - JWT_KEY=${JWT_KEY}
+      - CLOUD_MANAGEMENT_KEY=${CLOUD_MANAGEMENT_KEY}
     volumes:
-      - ./config.yaml:/usr/share/first-baby-time/config.yaml
+      - /Users/yumyeongcheol/Desktop/mspring03/project/Server/config.yaml:/usr/share/first-baby-time/config.yaml
+      - /var/run/docker.sock:/var/run/docker.sock
     deploy:
       mode: replicated
       replicas: 1
-      labels: [APP=first-baby-time]
-
-networks:
-  dms-sms-local:
-    name: dms-sms-local
-    driver: overlay
+      update_config:
+        parallelism: 1
+        failure_action: rollback
+#networks:
+#  dms-sms-local:
+#    name: dms-sms-local
+#    driver: overlay

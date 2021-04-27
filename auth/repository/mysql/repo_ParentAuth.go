@@ -72,7 +72,7 @@ func (ar *parentAuthRepository) GetByUUID(ctx tx.Context, uuid string) (auth str
 	case nil:
 		break
 	case sql.ErrNoRows:
-		err = rowNotExistErr{errors.Wrap(err, "failed to select parent auth")}
+		err = domain.ErrRowNotExist{RepoErr: errors.Wrap(err, "failed to select parent auth")}
 	default:
 		err = errors.Wrap(err, "select parent auth return unexpected error")
 	}
@@ -94,7 +94,7 @@ func (ar *parentAuthRepository) GetByID(ctx tx.Context, id string) (auth struct 
 	case nil:
 		break
 	case sql.ErrNoRows:
-		err = rowNotExistErr{errors.Wrap(err, "failed to select parent auth")}
+		err = domain.ErrRowNotExist{RepoErr: errors.Wrap(err, "failed to select parent auth")}
 	default:
 		err = errors.Wrap(err, "select parent auth return unexpected error var")
 	}
@@ -111,7 +111,7 @@ func (ar *parentAuthRepository) Store(ctx tx.Context, pa *domain.ParentAuth) (er
 	}
 
 	if err = ar.validator.ValidateStruct(pa); err != nil {
-		err = invalidModelErr{errors.Wrap(err, "failed to validate domain.ParentAuth")}
+		err = domain.ErrInvalidModel{RepoErr: errors.Wrap(err, "failed to validate domain.ParentAuth")}
 		return
 	}
 
@@ -128,7 +128,7 @@ func (ar *parentAuthRepository) Store(ctx tx.Context, pa *domain.ParentAuth) (er
 		case mysqlerr.ER_DUP_ENTRY:
 			err = errors.Wrap(err, "failed to insert parent auth")
 			_, key := ar.sqlMsgParser.EntryDuplicate(tErr.Message)
-			err = entryDuplicateErr{err, key}
+			err = domain.ErrEntryDuplicate{RepoErr: err, DuplicateKey: key}
 		default:
 			err = errors.Wrap(err, "insert parent auth return unexpected code return")
 		}
@@ -148,7 +148,7 @@ func (ar *parentAuthRepository) GetAvailableUUID(ctx tx.Context) (string, error)
 
 		if err == nil {
 			continue
-		} else if _, ok := err.(rowNotExistErr); ok {
+		} else if _, ok := err.(domain.ErrRowNotExist); ok {
 			return uuid, nil
 		} else {
 			return "", errors.Wrap(err, "failed to GetByUUID")

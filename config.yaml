@@ -8,6 +8,7 @@ app:
   ALIGO_ACCOUNT_ID:
   ALIGO_SENDER:
   JWT_KEY:
+  CLOUD_MANAGEMENT_KEY:
 
 auth:
   accessTokenDuration: "24h"

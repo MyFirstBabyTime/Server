@@ -21,6 +21,9 @@ import (
 	_authHttpDelivery "github.com/MyFirstBabyTime/Server/auth/delivery/http"
 	_authRepo "github.com/MyFirstBabyTime/Server/auth/repository/mysql"
 	_authUcase "github.com/MyFirstBabyTime/Server/auth/usecase"
+
+	_cloudMaintainerDelivery "github.com/MyFirstBabyTime/Server/cloud-maintainer/delivery/http"
+	_cloudMaintainerUsecase "github.com/MyFirstBabyTime/Server/cloud-maintainer/usecase"
 )
 
 func init() {
@@ -50,7 +53,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"message": "pong2",
+			"message": "pong",
 		})
 	})
 
@@ -68,6 +71,11 @@ func main() {
 		_tx, _msg, _hash, _jwt,
 	)
 	_authHttpDelivery.NewAuthHandler(r, au, _vl)
+
+	cmu := _cloudMaintainerUsecase.CloudMaintainerUsecase(
+		config.App.CloudManagementKey(),
+	)
+	_cloudMaintainerDelivery.NewCloudMaintainerHandler(r, cmu, _vl)
 
 	log.Fatal(r.Run(":80"))
 }

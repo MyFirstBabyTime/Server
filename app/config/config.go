@@ -33,6 +33,9 @@ type appConfig struct {
 
 	// jwtKey represent jwt key
 	jwtKey *string
+
+	// cloudManagementKey represent cloud management key
+	cloudManagementKey *string
 }
 
 // ConfigFile return config file get from environment variable
@@ -140,6 +143,19 @@ func (ac *appConfig) JwtKey() string {
 		log.Fatal("please set JWT_KEY in environment variable")
 	}
 	return *ac.jwtKey
+}
+
+func (ac *appConfig) CloudManagementKey() string {
+	if ac.cloudManagementKey != nil {
+		return *ac.cloudManagementKey
+	}
+
+	if viper.IsSet("CLOUD_MANAGEMENT_KEY") {
+		ac.cloudManagementKey = _string(viper.GetString("CLOUD_MANAGEMENT_KEY"))
+	} else {
+		log.Fatal("please set CLOUD_MANAGEMENT_KEY in environment variable")
+	}
+	return *ac.cloudManagementKey
 }
 
 func _string(s string) *string { return &s }
