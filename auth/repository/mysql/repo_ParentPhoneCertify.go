@@ -44,7 +44,7 @@ func ParentPhoneCertifyRepository(
 }
 
 // parentPhoneCertifyRepositoryConfig is interface get config value for parent phone certify repository
-type parentPhoneCertifyRepositoryConfig interface {}
+type parentPhoneCertifyRepositoryConfig interface{}
 
 // GetByPhoneNumber is implement domain.ParentPhoneCertifyRepository interface
 func (pp *parentPhoneCertifyRepository) GetByPhoneNumber(ctx tx.Context, pn string) (ppc domain.ParentPhoneCertify, err error) {

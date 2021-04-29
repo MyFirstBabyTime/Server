@@ -9,10 +9,10 @@ import (
 )
 
 // migrator is struct that migrate to mysql repository
-type migrator struct {}
+type migrator struct{}
 
 // MigrateModel method migrate model to db received from parameter
-func (m migrator) MigrateModel(db *sqlx.DB ,model interface {
+func (m migrator) MigrateModel(db *sqlx.DB, model interface {
 	TableName() string // TableName return table name about model
 	Schema() string    // Schema return schema SQL about model
 }) (err error) {

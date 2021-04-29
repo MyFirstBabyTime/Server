@@ -24,7 +24,7 @@ type parentAuthRepository struct {
 }
 
 // parentAuthRepositoryConfig is interface get config value for parent auth repository
-type parentAuthRepositoryConfig interface {}
+type parentAuthRepositoryConfig interface{}
 
 // sqlMsgParser is interface used for parse sql result message
 type sqlMsgParser interface {
@@ -119,7 +119,7 @@ func (ar *parentAuthRepository) Store(ctx tx.Context, pa *domain.ParentAuth) (er
 	_sql, args, _ := squirrel.Insert("parent_auth").
 		Columns("uuid", "id", "pw", "name", "profile_uri").
 		Values(pa.UUID, pa.ID, pa.PW, pa.Name, pa.ProfileUri).ToSql()
-	
+
 	switch _, err = _tx.Exec(_sql, args...); tErr := err.(type) {
 	case nil:
 		break
