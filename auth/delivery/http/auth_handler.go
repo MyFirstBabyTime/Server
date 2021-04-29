@@ -43,9 +43,9 @@ func (ah *authHandler) SendCertifyCodeToPhone(c *gin.Context) {
 	case nil:
 		resp := defaultResp(http.StatusOK, 0, "succeed to send certify code to phone")
 		c.JSON(http.StatusOK, resp)
-	case usecaseErr:
-		resp := defaultResp(tErr.Status(), tErr.Code(), tErr.Error())
-		c.JSON(tErr.Status(), resp)
+	case domain.UsecaseError:
+		resp := defaultResp(tErr.Status, tErr.Code, tErr.Error())
+		c.JSON(tErr.Status, resp)
 	default:
 		msg := errors.Wrap(err, "SendCertifyCodeToPhone return unexpected error").Error()
 		resp := defaultResp(http.StatusInternalServerError, 0, msg)
@@ -66,8 +66,8 @@ func (ah *authHandler) CertifyPhoneWithCode(c *gin.Context) {
 	case nil:
 		resp := defaultResp(http.StatusOK, 0, "succeed to certify phone with certify code")
 		c.JSON(http.StatusOK, resp)
-	case usecaseErr:
-		c.JSON(tErr.Status(), defaultResp(tErr.Status(), tErr.Code(), tErr.Error()))
+	case domain.UsecaseError:
+		c.JSON(tErr.Status, defaultResp(tErr.Status, tErr.Code, tErr.Error()))
 	default:
 		msg := errors.Wrap(err, "CertifyPhoneWithCode return unexpected error").Error()
 		c.JSON(http.StatusInternalServerError, defaultResp(http.StatusInternalServerError, 0, msg))
@@ -88,8 +88,8 @@ func (ah *authHandler) SignUpParent(c *gin.Context) {
 	case nil:
 		resp := defaultResp(http.StatusCreated, 0, "succeed to sign up new parent auth")
 		c.JSON(http.StatusCreated, resp)
-	case usecaseErr:
-		c.JSON(tErr.Status(), defaultResp(tErr.Status(), tErr.Code(), tErr.Error()))
+	case domain.UsecaseError:
+		c.JSON(tErr.Status, defaultResp(tErr.Status, tErr.Code, tErr.Error()))
 	default:
 		msg := errors.Wrap(err, "SignUpParent return unexpected error").Error()
 		c.JSON(http.StatusInternalServerError, defaultResp(http.StatusInternalServerError, 0, msg))
@@ -111,8 +111,8 @@ func (ah *authHandler) LoginParentAuth(c *gin.Context) {
 		resp := defaultResp(http.StatusOK, 0, "succeed to login parent auth")
 		resp["uuid"], resp["token"] = uuid, token
 		c.JSON(http.StatusOK, resp)
-	case usecaseErr:
-		c.JSON(tErr.Status(), defaultResp(tErr.Status(), tErr.Code(), tErr.Error()))
+	case domain.UsecaseError:
+		c.JSON(tErr.Status, defaultResp(tErr.Status, tErr.Code, tErr.Error()))
 	default:
 		msg := errors.Wrap(err, "LoginParentAuth return unexpected error").Error()
 		c.JSON(http.StatusInternalServerError, defaultResp(http.StatusInternalServerError, 0, msg))
