@@ -44,3 +44,14 @@ func (e Expenditure) Schema() string {
 			ON DELETE CASCADE
 	);`
 }
+
+// GenerateRandomUUID method return random UUID value
+func (e Expenditure) GenerateRandomUUID() string {
+	rand.Seed(time.Now().UnixNano())
+	is := []rune("0123456789")
+	random := make([]rune, 10)
+	for i := range random {
+		random[i] = is[rand.Intn(len(is))]
+	}
+	return fmt.Sprintf("e%s", string(random))
+}
