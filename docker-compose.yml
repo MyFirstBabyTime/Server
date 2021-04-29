@@ -3,6 +3,8 @@ services:
   server:
     image: mspring03/first-baby-time:${VERSION}.RELEASE
     container_name: server
+    networks:
+      - dms-sms-local
     ports:
     - target: 80
 #      published: 80
