@@ -70,6 +70,9 @@ func AuthUsecase(
 type authUsecaseConfig interface {
 	// AccessTokenDuration return access token valid duration
 	AccessTokenDuration() time.Duration
+
+	// ParentProfileS3Bucket return aws s3 bucket name for parent profile
+	ParentProfileS3Bucket() string
 }
 
 // txHandler is used for handling transaction to begin & commit or rollback
@@ -107,6 +110,7 @@ type jwtHandler interface {
 
 // s3Agency is agency that agent various API about aws s3
 type s3Agency interface {
+	// PutObject method put(insert or update) object to s3
 	PutObject(input *s3.PutObjectInput) (output *s3.PutObjectOutput, err error)
 }
 
