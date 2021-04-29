@@ -93,6 +93,11 @@ func (pa ParentAuth) GenerateRandomUUID() string {
 	return fmt.Sprintf("p%s", string(random))
 }
 
+// GenerateProfileUri method return ProfileUri value with field value
+func (pa ParentAuth) GenerateProfileUri() string {
+	return fmt.Sprintf("/profile/parents/uuid/%s", pa.UUID)
+}
+
 // ParentPhoneCertify is model represent parent phone number using in auth domain
 type ParentPhoneCertify struct {
 	ParentUUID  sql.NullString `db:"parent_uuid" validate:"uuid=parent"`
