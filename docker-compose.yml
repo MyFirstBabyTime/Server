@@ -5,7 +5,7 @@ services:
     container_name: server
     ports:
     - target: 80
-      published: 80
+      published: 8000
       protocol: tcp
       mode: host
     environment:
