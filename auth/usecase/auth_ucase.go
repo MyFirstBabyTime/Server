@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/pkg/errors"
 	"net/http"
 	"time"
@@ -34,6 +36,9 @@ type authUsecase struct {
 
 	// jwtHandler is used as handler about jwt
 	jwtHandler jwtHandler
+
+	// s3Agency is used as agency about aws s3 API
+	s3Agency s3Agency
 }
 
 // AuthUsecase return implementation of domain.AuthUsecase
@@ -45,6 +50,7 @@ func AuthUsecase(
 	ma messageAgency,
 	hh hashHandler,
 	jh jwtHandler,
+	sa s3Agency,
 ) domain.AuthUsecase {
 	return &authUsecase{
 		myCfg: cfg,
@@ -56,6 +62,7 @@ func AuthUsecase(
 		messageAgency: ma,
 		hashHandler:   hh,
 		jwtHandler:    jh,
+		s3Agency:      sa,
 	}
 }
 
@@ -96,6 +103,11 @@ type hashHandler interface {
 type jwtHandler interface {
 	// GenerateUUIDJWT generate & return JWT UUID token with type & time
 	GenerateUUIDJWT(uuid, _type string, t time.Duration) (token string, err error)
+}
+
+// s3Agency is agency that agent various API about aws s3
+type s3Agency interface {
+	PutObject(input *s3.PutObjectInput) (output *s3.PutObjectOutput, err error)
 }
 
 // SendCertifyCodeToPhone is implement domain.AuthUsecase interface
