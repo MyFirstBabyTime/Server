@@ -20,6 +20,10 @@ services:
       - ALIGO_SENDER=${ALIGO_SENDER}
       - JWT_KEY=${JWT_KEY}
       - CLOUD_MANAGEMENT_KEY=${CLOUD_MANAGEMENT_KEY}
+      - S3_REGION=${S3_REGION}
+      - AWS_S3_ID=${AWS_S3_ID}
+      - AWS_S3_KEY=${AWS_S3_KEY}
+      - S3_PROFILE_BUCKET=${S3_PROFILE_BUCKET}
     volumes:
       - /Users/yumyeongcheol/Desktop/mspring03/project/Server/config.yaml:/usr/share/first-baby-time/config.yaml
       - /var/run/docker.sock:/var/run/docker.sock
