@@ -51,3 +51,11 @@ type loginParentAuthRequest struct {
 func (r *loginParentAuthRequest) BindFrom(c *gin.Context) error {
 	return errors.Wrap(c.BindJSON(r), "failed to BindJSON")
 }
+
+type getParentInformByIDRequest struct {
+	ParentID string `uri:"parent_id" validate:"required"`
+}
+
+func (r *getParentInformByIDRequest) BindFrom(c *gin.Context) error {
+	return errors.Wrap(c.BindUri(r), "failed to BindUri")
+}
