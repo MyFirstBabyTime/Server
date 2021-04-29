@@ -8,11 +8,12 @@ import (
 )
 
 // sqlxHandler is struct that handle transaction with sqlx package
-type sqlxHandler struct { db *sqlx.DB }
+type sqlxHandler struct{ db *sqlx.DB }
+
 func NewSqlxHandler(db *sqlx.DB) *sqlxHandler { return &sqlxHandler{db} }
 
 // sqlxTxKey is used for key for transaction value in tx context
-type sqlxTxKey struct {}
+type sqlxTxKey struct{}
 
 // BeginTx method start transaction (get option from ctx)
 func (sh *sqlxHandler) BeginTx(ctx context.Context, opts interface{}) (txCtx Context, err error) {

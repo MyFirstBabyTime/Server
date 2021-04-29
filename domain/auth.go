@@ -28,11 +28,11 @@ type AuthUsecase interface {
 
 // ParentAuthRepository is repository interface about ParentAuth model
 type ParentAuthRepository interface {
-	GetByUUID(ctx tx.Context, uuid string) (struct{
+	GetByUUID(ctx tx.Context, uuid string) (struct {
 		ParentAuth
 		ParentPhoneCertify
 	}, error)
-	GetByID(ctx tx.Context, id string) (struct{
+	GetByID(ctx tx.Context, id string) (struct {
 		ParentAuth
 		ParentPhoneCertify
 	}, error)
@@ -135,4 +135,3 @@ func (pn ParentPhoneCertify) GenerateValidModel() ParentPhoneCertify {
 
 	return pn
 }
-

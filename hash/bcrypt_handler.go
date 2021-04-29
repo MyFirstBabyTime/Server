@@ -6,7 +6,7 @@ import (
 )
 
 // bcryptHandler is hash handler using bcrypt algorithm
-type bcryptHandler struct {}
+type bcryptHandler struct{}
 
 func BcryptHandler() *bcryptHandler {
 	return &bcryptHandler{}
@@ -37,4 +37,5 @@ func (bh *bcryptHandler) generateHashFromPW(pw string, salt int) (string, error)
 type mismatchErr struct {
 	error
 }
+
 func (_ mismatchErr) Mismatch() {}

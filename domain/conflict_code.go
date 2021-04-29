@@ -6,13 +6,13 @@ const (
 
 	// use in authUsecase.CertifyPhoneWithCode
 	PhoneAlreadyCertified = -111
-	IncorrectCertifyCode = -112
+	IncorrectCertifyCode  = -112
 
 	// use in authUsecase.SignUpParent
-	UncertifiedPhone = -121
+	UncertifiedPhone     = -121
 	ParentIDAlreadyInUse = -122
 
 	// use in authUsecase.LoginParentAuth
-	NotExistParentID = -131
+	NotExistParentID  = -131
 	IncorrectParentPW = -132
 )

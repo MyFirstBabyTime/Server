@@ -52,7 +52,6 @@ func (ac *appConfig) ConfigFile() string {
 	return *ac.configFile
 }
 
-
 // MysqlDataSource return mysql data source name with value get from environment variable
 func (ac *appConfig) MysqlDataSource() string {
 	if ac.mysqlDataSource != nil {
@@ -131,6 +130,7 @@ func (ac *appConfig) AligoSender() string {
 	}
 	return *ac.aligoSender
 }
+
 // JwtKey return jwt key get from environment variable
 func (ac *appConfig) JwtKey() string {
 	if ac.jwtKey != nil {
