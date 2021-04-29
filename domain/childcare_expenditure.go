@@ -23,3 +23,8 @@ type Expenditure struct {
 	Rating     int64          `db:"rating" validate:"range=0~5"`
 	Link       sql.NullString `db:"link"`
 }
+
+// TableName return table name about Expenditure model
+func (e Expenditure) TableName() string {
+	return "expenditure"
+}
