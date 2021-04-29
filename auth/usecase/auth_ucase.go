@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"fmt"
@@ -250,6 +251,9 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
 		if pi.UUID, err = au.parentAuthRepository.GetAvailableUUID(_tx); err != nil {
 			pi.UUID = pi.GenerateRandomUUID()
 		}
+		if len(profile) != 0 {
+			pi.ProfileUri = sql.NullString{String: pi.ParentAuth.GenerateProfileUri(), Valid: true}
+		}
 		switch err = au.parentAuthRepository.Store(_tx, pi.ParentAuth); tErr := err.(type) {
 		case nil:
 			break
@@ -299,8 +303,24 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
 		return
 	}
 
+	if len(profile) != 0 {
+		if _, err = au.s3Agency.PutObject(&s3.PutObjectInput{
+			Bucket: aws.String(au.myCfg.ParentProfileS3Bucket()),
+			Key:    aws.String(pi.ParentAuth.GenerateProfileUri()),
+			Body:   bytes.NewReader(profile),
+			ACL:    aws.String("public-read"),
+		}); err != nil {
+			err = errors.Wrap(err, "s3 PutObject return unexpected error")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
+			_ = au.txHandler.Rollback(_tx)
+			return
+		}
+	}
+
+	uuid = pi.UUID
+	err = nil
 	_ = au.txHandler.Commit(_tx)
-	return nil
+	return
 }
 
 // LoginParentAuth is implement domain.AuthUsecase interface
