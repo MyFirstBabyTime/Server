@@ -25,7 +25,8 @@ type AuthUsecase interface {
 	// LoginParentAuth method login parent auth & return logged ParentAuth model, token
 	LoginParentAuth(ctx context.Context, id, pw string) (uuid, token string, err error)
 
-	GetParentAuthByID(ctx context.Context, id string) (struct {
+	// GetParentInformByID method get ParentAuth & ParentPhoneCertify model inform by parent ID
+	GetParentInformByID(ctx context.Context, id string) (struct {
 		ParentAuth
 		ParentPhoneCertify
 	}, error)
