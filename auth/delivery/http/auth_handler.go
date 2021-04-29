@@ -84,10 +84,23 @@ func (ah *authHandler) SignUpParent(c *gin.Context) {
 		return
 	}
 
-	pa := &domain.ParentAuth{ID: req.ID, PW: req.PW, Name: req.Name}
-	switch err := ah.aUsecase.SignUpParent(c.Request.Context(), pa, req.PhoneNumber); tErr := err.(type) {
+	pi := struct {
+		*domain.ParentAuth
+		*domain.ParentPhoneCertify
+	}{
+		ParentAuth:         &domain.ParentAuth{ID: req.ParentID, PW: req.ParentPW, Name: req.Name},
+		ParentPhoneCertify: &domain.ParentPhoneCertify{PhoneNumber: req.PhoneNumber},
+	}
+
+	b := make([]byte, req.Profile.Size)
+	file, _ := req.Profile.Open()
+	defer func() { _ = file.Close() }()
+	_, _ = file.Read(b)
+
+	switch uuid, err := ah.aUsecase.SignUpParent(c.Request.Context(), pi, b); tErr := err.(type) {
 	case nil:
 		resp := defaultResp(http.StatusCreated, 0, "succeed to sign up new parent auth")
+		resp["parent_uuid"] = uuid
 		c.JSON(http.StatusCreated, resp)
 	case domain.UsecaseError:
 		c.JSON(tErr.Status, defaultResp(tErr.Status, tErr.Code, tErr.Error()))
