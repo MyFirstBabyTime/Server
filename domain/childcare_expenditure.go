@@ -9,3 +9,6 @@ import (
 
 type ExpenditureUsecase interface {
 }
+
+type ExpenditureRepository interface {
+}
