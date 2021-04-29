@@ -29,6 +29,7 @@ func NewAuthHandler(r *gin.Engine, au domain.AuthUsecase, v validator) {
 	r.POST("phones/phone-number/:phone_number/certification", h.CertifyPhoneWithCode)
 	r.POST("parents", h.SignUpParent)
 	r.POST("login/parent", h.LoginParentAuth)
+	r.GET("parents/id/:parent_id/existence", h.CheckIfParentIDExist)
 }
 
 // SendCertifyCodeToPhone deliver data to SendCertifyCodeToPhone of domain.AuthUsecase
@@ -115,6 +116,27 @@ func (ah *authHandler) LoginParentAuth(c *gin.Context) {
 		c.JSON(tErr.Status, defaultResp(tErr.Status, tErr.Code, tErr.Error()))
 	default:
 		msg := errors.Wrap(err, "LoginParentAuth return unexpected error").Error()
+		c.JSON(http.StatusInternalServerError, defaultResp(http.StatusInternalServerError, 0, msg))
+	}
+	return
+}
+
+// CheckIfParentIDExist deliver data to CheckIfParentIDExist of domain.AuthUsecase
+func (ah *authHandler) CheckIfParentIDExist(c *gin.Context) {
+	req := new(getParentInformByIDRequest)
+	if err := ah.bindRequest(req, c); err != nil {
+		c.JSON(http.StatusBadRequest, defaultResp(http.StatusBadRequest, 0, err.Error()))
+		return
+	}
+
+	switch _, err := ah.aUsecase.GetParentInformByID(c.Request.Context(), req.ParentID); tErr := err.(type) {
+	case nil:
+		resp := defaultResp(http.StatusOK, 0, "parent auth with that ID is exist")
+		c.JSON(http.StatusOK, resp)
+	case domain.UsecaseError:
+		c.JSON(tErr.Status, defaultResp(tErr.Status, tErr.Code, tErr.Error()))
+	default:
+		msg := errors.Wrap(err, "GetParentInformByID return unexpected error").Error()
 		c.JSON(http.StatusInternalServerError, defaultResp(http.StatusInternalServerError, 0, msg))
 	}
 	return
