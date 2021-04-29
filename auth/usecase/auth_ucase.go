@@ -219,14 +219,17 @@ func (au *authUsecase) CertifyPhoneWithCode(ctx context.Context, pn string, code
 }
 
 // SignUpParent is implement domain.AuthUsecase interface
-func (au *authUsecase) SignUpParent(ctx context.Context, pa *domain.ParentAuth, pn string) (err error) {
+func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
+	*domain.ParentAuth
+	*domain.ParentPhoneCertify
+}, profile []byte) (uuid string, err error) {
 	_tx, err := au.txHandler.BeginTx(ctx, nil)
 	if err != nil {
 		err = errors.Wrap(err, "failed to begin transaction")
 		return
 	}
 
-	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, pn)
+	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, pi.PhoneNumber)
 	if err == nil && ppc.Certified.Valid && ppc.Certified.Bool {
 		if ppc.ParentUUID.Valid {
 			err = errors.New("this phone number is already in use")
@@ -234,16 +237,16 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pa *domain.ParentAuth, 
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
-		if pa.PW, err = au.hashHandler.GenerateHashWithMinSalt(pa.PW); err != nil {
+		if pi.PW, err = au.hashHandler.GenerateHashWithMinSalt(pi.PW); err != nil {
 			err = errors.Wrap(err, "failed to GenerateHashWithMinSalt")
 			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
-		if pa.UUID, err = au.parentAuthRepository.GetAvailableUUID(_tx); err != nil {
-			pa.UUID = pa.GenerateRandomUUID()
+		if pi.UUID, err = au.parentAuthRepository.GetAvailableUUID(_tx); err != nil {
+			pi.UUID = pi.GenerateRandomUUID()
 		}
-		switch err = au.parentAuthRepository.Store(_tx, pa); tErr := err.(type) {
+		switch err = au.parentAuthRepository.Store(_tx, pi.ParentAuth); tErr := err.(type) {
 		case nil:
 			break
 		case domain.ErrInvalidModel:
@@ -284,7 +287,7 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pa *domain.ParentAuth, 
 		}
 	}
 
-	ppc.ParentUUID = sql.NullString{String: pa.UUID, Valid: true}
+	ppc.ParentUUID = sql.NullString{String: pi.UUID, Valid: true}
 	if err = au.parentPhoneCertifyRepository.Update(_tx, &ppc); err != nil {
 		err = errors.Wrap(err, "phone Update return unexpected error")
 		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
