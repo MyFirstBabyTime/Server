@@ -15,11 +15,11 @@ func (m migrator) MigrateModel(db *sqlx.DB, model interface {
 	Schema() string
 }) (err error) {
 	sql, _, _ := squirrel.Select("*").From(model.TableName()).ToSql()
-	switch  _, err = db.Query(sql); tErr := err.(type) {
+	switch _, err = db.Query(sql); tErr := err.(type) {
 	case nil:
 		break
 	case *mysql.MySQLError:
-		switch  tErr.Number {
+		switch tErr.Number {
 		case mysqlerr.ER_NO_SUCH_TABLE:
 			_, err = db.Exec(model.Schema())
 			err = errors.Wrapf(err, "failed to exec %s model schema", model.TableName())
