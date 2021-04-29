@@ -1,7 +1,8 @@
 version: '3.5'
 services:
   server:
-    image: mspring03/first-baby-time:${VERSION}.RELEASE
+#    image: mspring03/first-baby-time:${VERSION}.RELEASE
+    image: ${DOCKER_USER}/first-baby-time:${VERSION}.RELEASE
     container_name: server
     ports:
     - target: 80
