@@ -6,3 +6,6 @@ import (
 	"math/rand"
 	"time"
 )
+
+type ExpenditureUsecase interface {
+}
