@@ -35,7 +35,8 @@ services:
       update_config:
         parallelism: 1
         failure_action: rollback
-#networks:
-#  dms-sms-local:
-#    name: dms-sms-local
-#    driver: overlay
+
+networks:
+  dms-sms-local:
+    name: dms-sms-local
+    driver: overlay
