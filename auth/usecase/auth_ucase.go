@@ -328,3 +328,26 @@ func (au *authUsecase) LoginParentAuth(ctx context.Context, id, pw string) (uuid
 	_ = au.txHandler.Commit(_tx)
 	return
 }
+
+// GetParentInformByID is implement domain.AuthUsecase interface
+func (au *authUsecase) GetParentInformByID(ctx context.Context, id string) (pi struct {
+	domain.ParentAuth
+	domain.ParentPhoneCertify
+}, err error) {
+	_tx, err := au.txHandler.BeginTx(ctx, nil)
+	if err != nil {
+		err = errors.Wrap(err, "failed to begin transaction")
+		return
+	}
+
+	pi, err = au.parentAuthRepository.GetByID(_tx, id)
+	switch err.(type) {
+	case nil:
+	case domain.ErrRowNotExist:
+		err = domain.UsecaseError{UsecaseErr: errors.New("not exist parent auth with that ID"), Status: http.StatusNotFound}
+		_ = au.txHandler.Rollback(_tx)
+	}
+
+	_ = au.txHandler.Commit(_tx)
+	return pi, err
+}
