@@ -34,11 +34,11 @@ func (r *certifyPhoneWithCodeRequest) BindFrom(c *gin.Context) error {
 
 // signUpParentRequest is request for authHandler.SignUpParent
 type signUpParentRequest struct {
-	ParentID    string               `form:"id" validate:"required,min=4,max=20"`
-	ParentPW    string               `form:"pw" validate:"required,min=6,max=20"`
-	Name        string               `form:"name" validate:"required,max=10"`
-	PhoneNumber string               `form:"phone_number" validate:"required,len=11"`
-	Profile     multipart.FileHeader `form:"profile"`
+	ParentID    string                `form:"id" validate:"required,min=4,max=20"`
+	ParentPW    string                `form:"pw" validate:"required,min=6,max=20"`
+	Name        string                `form:"name" validate:"required,max=10"`
+	PhoneNumber string                `form:"phone_number" validate:"required,len=11"`
+	Profile     *multipart.FileHeader `form:"profile"`
 }
 
 func (r *signUpParentRequest) BindFrom(c *gin.Context) error {
