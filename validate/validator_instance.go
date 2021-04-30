@@ -56,5 +56,5 @@ func (mv *customValidator) ValidateStruct(s interface{}) error {
 		}
 	}
 
-	return mv.Struct(v)
+	return mv.Struct(v.Interface())
 }
