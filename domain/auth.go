@@ -59,8 +59,8 @@ type ParentPhoneCertifyRepository interface {
 type ParentAuth struct {
 	UUID       *string `db:"uuid" validate:"required,uuid=parent"`
 	ID         *string `db:"id" validate:"required,min=4,max=20"`
-	PW         *string `db:"pw" validate:"required"`
-	Name       *string `db:"name" validate:"required,max=20"`
+	PW         *string `db:"pw" validate:"required,min=1"`
+	Name       *string `db:"name" validate:"required,min=1,max=20"`
 	ProfileUri *string `db:"profile_uri"`
 }
 
@@ -95,6 +95,31 @@ func (pa ParentAuth) GenerateRandomUUID() string {
 // GenerateProfileUri method return ProfileUri value with field value
 func (pa ParentAuth) GenerateProfileUri() string {
 	return fmt.Sprintf("/profiles/parents/uuid/%s", pa.UUID)
+}
+
+// GenerateValidModel method return model referenced by value with set valid value
+func (pa ParentAuth) GenerateValidModel() ParentAuth {
+	var (
+		validUUID = String(pa.GenerateRandomUUID())
+		validID   = String("validID")
+		validPW   = String("validPWHashedString")
+		validName = String("validName")
+	)
+
+	if pa.UUID == nil {
+		pa.UUID = validUUID
+	}
+	if pa.ID == nil {
+		pa.ID = validID
+	}
+	if pa.PW == nil {
+		pa.PW = validPW
+	}
+	if pa.Name == nil {
+		pa.Name = validName
+	}
+
+	return pa
 }
 
 // ParentPhoneCertify is model represent parent phone number using in auth domain
@@ -142,7 +167,7 @@ func (pn ParentPhoneCertify) GenerateValidModel() ParentPhoneCertify {
 		validCertifyCode = Int64(123456)
 	)
 
-	if Int64Value(pn.CertifyCode) == 0 {
+	if pn.CertifyCode == nil {
 		pn.CertifyCode = validCertifyCode
 	}
 
