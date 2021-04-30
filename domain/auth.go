@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"mime/multipart"
 	"strconv"
 	"time"
 
@@ -22,7 +23,7 @@ type AuthUsecase interface {
 	SignUpParent(ctx context.Context, pi struct {
 		*ParentAuth
 		*ParentPhoneCertify
-	}, profile []byte) (uuid string, err error)
+	}, profile *multipart.FileHeader) (uuid string, err error)
 
 	// LoginParentAuth method login parent auth & return logged ParentAuth model, token
 	LoginParentAuth(ctx context.Context, id, pw string) (uuid, token string, err error)
@@ -32,6 +33,9 @@ type AuthUsecase interface {
 		ParentAuth
 		ParentPhoneCertify
 	}, error)
+
+	// UpdateParentInform method update ParentAuth model inform & profile image with parent uuid
+	UpdateParentInform(ctx context.Context, uuid string, pa *ParentAuth, profile *multipart.FileHeader) (err error)
 }
 
 // ParentAuthRepository is repository interface about ParentAuth model
@@ -95,7 +99,7 @@ func (pa ParentAuth) GenerateRandomUUID() string {
 
 // GenerateProfileUri method return ProfileUri value with field value
 func (pa ParentAuth) GenerateProfileUri() string {
-	return fmt.Sprintf("/profiles/parents/uuid/%s", pa.UUID)
+	return fmt.Sprintf("/profiles/parents/uuid/%s", StringValue(pa.UUID))
 }
 
 // GenerateValidModel method return model referenced by value with set valid value
