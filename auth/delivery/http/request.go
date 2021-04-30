@@ -61,3 +61,25 @@ type getParentInformByIDRequest struct {
 func (r *getParentInformByIDRequest) BindFrom(c *gin.Context) error {
 	return errors.Wrap(c.BindUri(r), "failed to BindUri")
 }
+
+type updateParentInformRequest struct {
+	ParentUUID string                `uri:"parent_uuid" validate:"required"`
+	Name       *string               `form:"name" validate:"max=10"`
+	Profile    *multipart.FileHeader `form:"profile"`
+}
+
+func (r *updateParentInformRequest) BindFrom(c *gin.Context) error {
+	if err := c.BindUri(r); err != nil {
+		return errors.Wrap(err, "failed to BindUri")
+	}
+
+	if err := c.Bind(r); err != nil {
+		return errors.Wrap(err, "failed to Bind")
+	}
+
+	if r.Name != nil && *r.Name == "" {
+		return errors.New("name blank is not allowed")
+	}
+
+	return nil
+}
