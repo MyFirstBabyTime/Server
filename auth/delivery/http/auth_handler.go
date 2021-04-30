@@ -88,8 +88,14 @@ func (ah *authHandler) SignUpParent(c *gin.Context) {
 		*domain.ParentAuth
 		*domain.ParentPhoneCertify
 	}{
-		ParentAuth:         &domain.ParentAuth{ID: req.ParentID, PW: req.ParentPW, Name: req.Name},
-		ParentPhoneCertify: &domain.ParentPhoneCertify{PhoneNumber: req.PhoneNumber},
+		ParentAuth: &domain.ParentAuth{
+			ID:   domain.String(req.ParentID),
+			PW:   domain.String(req.ParentPW),
+			Name: domain.String(req.Name),
+		},
+		ParentPhoneCertify: &domain.ParentPhoneCertify{
+			PhoneNumber: domain.String(req.PhoneNumber),
+		},
 	}
 
 	b := make([]byte, req.Profile.Size)
