@@ -22,6 +22,10 @@ import (
 	_authRepo "github.com/MyFirstBabyTime/Server/auth/repository/mysql"
 	_authUcase "github.com/MyFirstBabyTime/Server/auth/usecase"
 
+	_expenditureUcase "github.com/MyFirstBabyTime/Server/chlidcare-expenditure/usecase"
+	_expenditureDelivery "github.com/MyFirstBabyTime/Server/chlidcare-expenditure/delivery/http"
+	_expenditureRepo "github.com/MyFirstBabyTime/Server/chlidcare-expenditure/repository/mysql"
+
 	_cloudMaintainerDelivery "github.com/MyFirstBabyTime/Server/cloud-maintainer/delivery/http"
 	_cloudMaintainerUsecase "github.com/MyFirstBabyTime/Server/cloud-maintainer/usecase"
 )
@@ -71,6 +75,12 @@ func main() {
 		_tx, _msg, _hash, _jwt,
 	)
 	_authHttpDelivery.NewAuthHandler(r, au, _vl)
+
+	eu := _expenditureUcase.ExpenditureUsecase(
+		_expenditureRepo.ExpenditureRepository(db, _vl),
+		_tx, _jwt,
+	)
+	_expenditureDelivery.NewExpenditureHandler(r, eu, _vl)
 
 	cmu := _cloudMaintainerUsecase.CloudMaintainerUsecase(
 		config.App.CloudManagementKey(),
