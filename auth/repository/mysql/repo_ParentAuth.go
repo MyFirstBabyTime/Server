@@ -204,7 +204,7 @@ func (ar *parentAuthRepository) Update(ctx tx.Context, pa *domain.ParentAuth) (e
 	}
 
 	if _, err = _tx.Exec(_sql, args...); err != nil {
-		err = errors.Wrap(err, "update parent auth return unexpected error")
+		err = errors.Wrap(err, "failed to update parent auth")
 	}
 	return
 }

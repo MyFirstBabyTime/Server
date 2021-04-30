@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/pkg/errors"
+	"mime/multipart"
 	"net/http"
 	"time"
 
@@ -114,7 +115,7 @@ type s3Agency interface {
 	PutObject(input *s3.PutObjectInput) (output *s3.PutObjectOutput, err error)
 }
 
-// SendCertifyCodeToPhone is implement domain.AuthUsecase interface
+// SendCertifyCodeToPhone implement SendCertifyCodeToPhone method of domain.AuthUsecase interface
 func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (err error) {
 	_tx, err := au.txHandler.BeginTx(ctx, nil)
 	if err != nil {
@@ -173,7 +174,7 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 	return nil
 }
 
-// CertifyPhoneWithCode is implement domain.AuthUsecase interface
+// CertifyPhoneWithCode implement CertifyPhoneWithCode method of domain.AuthUsecase interface
 func (au *authUsecase) CertifyPhoneWithCode(ctx context.Context, pn string, code int64) (err error) {
 	_tx, err := au.txHandler.BeginTx(ctx, nil)
 	if err != nil {
@@ -222,11 +223,11 @@ func (au *authUsecase) CertifyPhoneWithCode(ctx context.Context, pn string, code
 	return nil
 }
 
-// SignUpParent is implement domain.AuthUsecase interface
+// SignUpParent implement SignUpParent method of domain.AuthUsecase interface
 func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
 	*domain.ParentAuth
 	*domain.ParentPhoneCertify
-}, profile []byte) (uuid string, err error) {
+}, profile *multipart.FileHeader) (uuid string, err error) {
 	_tx, err := au.txHandler.BeginTx(ctx, nil)
 	if err != nil {
 		err = errors.Wrap(err, "failed to begin transaction")
@@ -256,7 +257,7 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
 		} else {
 			pi.UUID = domain.String(uuid)
 		}
-		if len(profile) != 0 {
+		if profile != nil {
 			pi.ProfileUri = domain.String(pi.ParentAuth.GenerateProfileUri())
 		}
 
@@ -309,11 +310,16 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
 		return
 	}
 
-	if len(profile) != 0 {
+	if profile != nil {
+		b := make([]byte, profile.Size)
+		file, _ := profile.Open()
+		defer func() { _ = file.Close() }()
+		_, _ = file.Read(b)
+
 		if _, err = au.s3Agency.PutObject(&s3.PutObjectInput{
 			Bucket: aws.String(au.myCfg.ParentProfileS3Bucket()),
 			Key:    aws.String(pi.ParentAuth.GenerateProfileUri()),
-			Body:   bytes.NewReader(profile),
+			Body:   bytes.NewReader(b),
 			ACL:    aws.String("public-read"),
 		}); err != nil {
 			err = errors.Wrap(err, "s3 PutObject return unexpected error")
@@ -329,7 +335,7 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
 	return
 }
 
-// LoginParentAuth is implement domain.AuthUsecase interface
+// LoginParentAuth implement LoginParentAuth method of domain.AuthUsecase interface
 func (au *authUsecase) LoginParentAuth(ctx context.Context, id, pw string) (uuid, token string, err error) {
 	_tx, err := au.txHandler.BeginTx(ctx, nil)
 	if err != nil {
@@ -374,7 +380,7 @@ func (au *authUsecase) LoginParentAuth(ctx context.Context, id, pw string) (uuid
 	return
 }
 
-// GetParentInformByID is implement domain.AuthUsecase interface
+// GetParentInformByID implement GetParentInformByID method of domain.AuthUsecase interface
 func (au *authUsecase) GetParentInformByID(ctx context.Context, id string) (pi struct {
 	domain.ParentAuth
 	domain.ParentPhoneCertify
@@ -395,4 +401,51 @@ func (au *authUsecase) GetParentInformByID(ctx context.Context, id string) (pi s
 
 	_ = au.txHandler.Commit(_tx)
 	return pi, err
+}
+
+// UpdateParentInform implement UpdateParentInform method of domain.AuthUsecase interface
+func (au *authUsecase) UpdateParentInform(ctx context.Context, uuid string, pa *domain.ParentAuth, profile *multipart.FileHeader) (err error) {
+	_tx, err := au.txHandler.BeginTx(ctx, nil)
+	if err != nil {
+		err = errors.Wrap(err, "failed to begin transaction")
+		return
+	}
+	pa.UUID = domain.String(uuid)
+
+	var b []byte
+	if profile != nil {
+		b = make([]byte, profile.Size)
+		file, _ := profile.Open()
+		defer func() { _ = file.Close() }()
+		_, _ = file.Read(b)
+		if len(b) == 0 {
+			pa.ProfileUri = domain.String("")
+		} else {
+			pa.ProfileUri = domain.String(pa.GenerateProfileUri())
+		}
+	}
+
+	if err = au.parentAuthRepository.Update(_tx, pa); err != nil {
+		err = errors.Wrap(err, "failed to Update")
+		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
+		_ = au.txHandler.Rollback(_tx)
+		return
+	}
+
+	if len(b) != 0 {
+		if _, err = au.s3Agency.PutObject(&s3.PutObjectInput{
+			Bucket: aws.String(au.myCfg.ParentProfileS3Bucket()),
+			Key:    aws.String(domain.StringValue(pa.ProfileUri)),
+			Body:   bytes.NewReader(b),
+			ACL:    aws.String("public-read"),
+		}); err != nil {
+			err = errors.Wrap(err, "s3 PutObject return unexpected error")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
+			_ = au.txHandler.Rollback(_tx)
+			return
+		}
+	}
+
+	_ = au.txHandler.Commit(_tx)
+	return nil
 }
