@@ -2,7 +2,6 @@ package domain
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -58,11 +57,11 @@ type ParentPhoneCertifyRepository interface {
 
 // ParentAuth is model represent parent auth using in auth domain
 type ParentAuth struct {
-	UUID       string         `db:"uuid" validate:"required,uuid=parent"`
-	ID         string         `db:"id" validate:"required,min=4,max=20"`
-	PW         string         `db:"pw" validate:"required"`
-	Name       string         `db:"name" validate:"required,max=20"`
-	ProfileUri sql.NullString `db:"profile_uri"`
+	UUID       *string `db:"uuid" validate:"required,uuid=parent"`
+	ID         *string `db:"id" validate:"required,min=4,max=20"`
+	PW         *string `db:"pw" validate:"required"`
+	Name       *string `db:"name" validate:"required,max=20"`
+	ProfileUri *string `db:"profile_uri"`
 }
 
 // TableName return table name about ParentAuth model
@@ -100,10 +99,10 @@ func (pa ParentAuth) GenerateProfileUri() string {
 
 // ParentPhoneCertify is model represent parent phone number using in auth domain
 type ParentPhoneCertify struct {
-	ParentUUID  sql.NullString `db:"parent_uuid" validate:"uuid=parent"`
-	PhoneNumber string         `db:"phone_number" validate:"required,len=11"`
-	CertifyCode int64          `db:"certify_code" validate:"required,range=100000~999999"`
-	Certified   sql.NullBool   `db:"certified"`
+	ParentUUID  *string `db:"parent_uuid" validate:"uuid=parent"`
+	PhoneNumber *string `db:"phone_number" validate:"required,len=11"`
+	CertifyCode *int64  `db:"certify_code" validate:"required,range=100000~999999"`
+	Certified   *bool   `db:"certified"`
 }
 
 // TableName return table name about ParentPhoneNumber model
