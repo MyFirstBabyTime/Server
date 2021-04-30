@@ -46,6 +46,7 @@ type ParentAuthRepository interface {
 	}, error)
 	GetAvailableUUID(ctx tx.Context) (uuid string, err error)
 	Store(ctx tx.Context, pa *ParentAuth) error
+	Update(ctx tx.Context, pa *ParentAuth) error
 }
 
 // ParentPhoneCertifyRepository is repository interface about ParentPhoneCertify model
