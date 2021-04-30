@@ -36,7 +36,7 @@ func (r *certifyPhoneWithCodeRequest) BindFrom(c *gin.Context) error {
 type signUpParentRequest struct {
 	ParentID    string                `form:"id" validate:"required,min=4,max=20"`
 	ParentPW    string                `form:"pw" validate:"required,min=6,max=20"`
-	Name        string                `form:"name" validate:"required,max=10"`
+	Name        string                `form:"name" validate:"required,max=20"`
 	PhoneNumber string                `form:"phone_number" validate:"required,len=11"`
 	Profile     *multipart.FileHeader `form:"profile"`
 }
@@ -64,7 +64,7 @@ func (r *getParentInformByIDRequest) BindFrom(c *gin.Context) error {
 
 type updateParentInformRequest struct {
 	ParentUUID string                `uri:"parent_uuid" validate:"required"`
-	Name       *string               `form:"name" validate:"max=10"`
+	Name       *string               `form:"name" validate:"max=20"`
 	Profile    *multipart.FileHeader `form:"profile"`
 }
 
