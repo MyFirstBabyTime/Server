@@ -3,7 +3,6 @@ package usecase
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -124,16 +123,17 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 	}
 
 	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, pn)
+	ppc = domain.ParentPhoneCertify{PhoneNumber: domain.String(pn)}
 	switch err.(type) {
 	case nil:
-		if ppc.ParentUUID.Valid {
+		if domain.StringValue(ppc.ParentUUID) != "" {
 			err = errors.New("this phone number is already in use")
 			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusConflict, Code: domain.PhoneAlreadyInUse}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
-		ppc.CertifyCode = ppc.GenerateCertifyCode()
-		ppc.Certified = sql.NullBool{Bool: false, Valid: true}
+		ppc.CertifyCode = domain.Int64(ppc.GenerateCertifyCode())
+		ppc.Certified = domain.Bool(false)
 		switch err = au.parentPhoneCertifyRepository.Update(_tx, &ppc); err.(type) {
 		case nil:
 			break
@@ -144,8 +144,7 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 			return
 		}
 	case domain.ErrRowNotExist:
-		ppc = domain.ParentPhoneCertify{PhoneNumber: pn}
-		ppc.CertifyCode = ppc.GenerateCertifyCode()
+		ppc.CertifyCode = domain.Int64(ppc.GenerateCertifyCode())
 		switch err = au.parentPhoneCertifyRepository.Store(_tx, &ppc); err.(type) {
 		case nil:
 			break
@@ -163,7 +162,7 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 	}
 
 	content := fmt.Sprintf("[육아는 처음이지 인증 번호]\n회원가입 인증 번호: %d", ppc.CertifyCode)
-	if err = au.messageAgency.SendSMSToOne(ppc.PhoneNumber, content); err != nil {
+	if err = au.messageAgency.SendSMSToOne(domain.StringValue(ppc.PhoneNumber), content); err != nil {
 		err = errors.Wrap(err, "SendSMSToOne return unexpected error")
 		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 		_ = au.txHandler.Rollback(_tx)
@@ -185,19 +184,19 @@ func (au *authUsecase) CertifyPhoneWithCode(ctx context.Context, pn string, code
 	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, pn)
 	switch err.(type) {
 	case nil:
-		if ppc.Certified.Valid && ppc.Certified.Bool {
+		if domain.BoolValue(ppc.Certified) == true {
 			err = errors.New("this phone number is already certified")
 			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusConflict, Code: domain.PhoneAlreadyCertified}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
-		if code != ppc.CertifyCode {
+		if code != domain.Int64Value(ppc.CertifyCode) {
 			err = errors.New("incorrect certify code to that phone number")
 			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusConflict, Code: domain.IncorrectCertifyCode}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
-		ppc.Certified = sql.NullBool{Bool: true, Valid: true}
+		ppc.Certified = domain.Bool(true)
 		switch err = au.parentPhoneCertifyRepository.Update(_tx, &ppc); err.(type) {
 		case nil:
 			break
@@ -234,26 +233,33 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
 		return
 	}
 
-	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, pi.PhoneNumber)
-	if err == nil && ppc.Certified.Valid && ppc.Certified.Bool {
-		if ppc.ParentUUID.Valid {
+	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, domain.StringValue(pi.PhoneNumber))
+	if err == nil && domain.BoolValue(ppc.Certified) == true {
+		if domain.StringValue(ppc.ParentUUID) != "" {
 			err = errors.New("this phone number is already in use")
 			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusConflict, Code: domain.PhoneAlreadyInUse}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
-		if pi.PW, err = au.hashHandler.GenerateHashWithMinSalt(pi.PW); err != nil {
+
+		if hash, err := au.hashHandler.GenerateHashWithMinSalt(domain.StringValue(pi.PW)); err != nil {
 			err = errors.Wrap(err, "failed to GenerateHashWithMinSalt")
 			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 			_ = au.txHandler.Rollback(_tx)
-			return
+			return "", err
+		} else {
+			pi.PW = domain.String(hash)
 		}
-		if pi.UUID, err = au.parentAuthRepository.GetAvailableUUID(_tx); err != nil {
-			pi.UUID = pi.GenerateRandomUUID()
+
+		if uuid, err = au.parentAuthRepository.GetAvailableUUID(_tx); err != nil {
+			pi.UUID = domain.String(pi.GenerateRandomUUID())
+		} else {
+			pi.UUID = domain.String(uuid)
 		}
 		if len(profile) != 0 {
-			pi.ProfileUri = sql.NullString{String: pi.ParentAuth.GenerateProfileUri(), Valid: true}
+			pi.ProfileUri = domain.String(pi.ParentAuth.GenerateProfileUri())
 		}
+
 		switch err = au.parentAuthRepository.Store(_tx, pi.ParentAuth); tErr := err.(type) {
 		case nil:
 			break
@@ -295,7 +301,7 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
 		}
 	}
 
-	ppc.ParentUUID = sql.NullString{String: pi.UUID, Valid: true}
+	ppc.ParentUUID = domain.String(domain.StringValue(pi.UUID))
 	if err = au.parentPhoneCertifyRepository.Update(_tx, &ppc); err != nil {
 		err = errors.Wrap(err, "phone Update return unexpected error")
 		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
@@ -317,7 +323,7 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
 		}
 	}
 
-	uuid = pi.UUID
+	uuid = domain.StringValue(pi.UUID)
 	err = nil
 	_ = au.txHandler.Commit(_tx)
 	return
@@ -334,7 +340,7 @@ func (au *authUsecase) LoginParentAuth(ctx context.Context, id, pw string) (uuid
 	pa, err := au.parentAuthRepository.GetByID(_tx, id)
 	switch err.(type) {
 	case nil:
-		switch err = au.hashHandler.CompareHashAndPW(pa.PW, pw); err.(type) {
+		switch err = au.hashHandler.CompareHashAndPW(domain.StringValue(pa.PW), pw); err.(type) {
 		case nil:
 			break
 		case interface{ Mismatch() }:
@@ -360,8 +366,8 @@ func (au *authUsecase) LoginParentAuth(ctx context.Context, id, pw string) (uuid
 		return
 	}
 
-	uuid = pa.UUID
-	token, err = au.jwtHandler.GenerateUUIDJWT(pa.UUID, "access_token", au.myCfg.AccessTokenDuration())
+	uuid = domain.StringValue(pa.UUID)
+	token, err = au.jwtHandler.GenerateUUIDJWT(uuid, "access_token", au.myCfg.AccessTokenDuration())
 	err = nil
 
 	_ = au.txHandler.Commit(_tx)
