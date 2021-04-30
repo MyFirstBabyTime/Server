@@ -41,8 +41,8 @@ func isWithinRange(fl validator.FieldLevel) bool {
 	return field >= start && field <= end
 }
 
-// sqlNullStringType function assert driver.Valuer & return Value()
-func sqlNullStringType(field reflect.Value) (v interface{}) {
+// sqlNullStringTypeConverter function assert driver.Valuer & return Value()
+func sqlNullStringTypeConverter(field reflect.Value) (v interface{}) {
 	v = ""
 	if valuer, ok := field.Interface().(driver.Valuer); ok {
 		if value, err := valuer.Value(); err == nil && value != nil {
