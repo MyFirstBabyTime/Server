@@ -103,10 +103,12 @@ func (ar *parentAuthRepository) GetByID(ctx tx.Context, id string) (auth struct 
 
 // Store is implement domain.ParentAuthRepository interface
 func (ar *parentAuthRepository) Store(ctx tx.Context, pa *domain.ParentAuth) (err error) {
-	if pa.UUID == "" {
-		if pa.UUID, err = ar.GetAvailableUUID(ctx); err != nil {
+	if domain.StringValue(pa.UUID) == "" {
+		if uuid, err := ar.GetAvailableUUID(ctx); err != nil {
 			err = errors.Wrap(err, "failed to GetAvailableUUID")
-			return
+			return err
+		} else {
+			pa.UUID = domain.String(uuid)
 		}
 	}
 
