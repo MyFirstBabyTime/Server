@@ -139,10 +139,10 @@ func (pn *ParentPhoneCertify) GenerateCertifyCode() int64 {
 // GenerateValidModel method return model referenced by value with set valid value
 func (pn ParentPhoneCertify) GenerateValidModel() ParentPhoneCertify {
 	var (
-		validCertifyCode int64 = 123456
+		validCertifyCode = Int64(123456)
 	)
 
-	if pn.CertifyCode == 0 {
+	if Int64Value(pn.CertifyCode) == 0 {
 		pn.CertifyCode = validCertifyCode
 	}
 
