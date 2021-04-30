@@ -3,6 +3,7 @@ package validate
 import (
 	"database/sql"
 	"github.com/go-playground/validator/v10"
+	"reflect"
 )
 
 // validatorInstance is global variable returned in customValidator function
@@ -15,7 +16,7 @@ func init() {
 	_ = v.RegisterValidation("uuid", isValidateUUID)
 	_ = v.RegisterValidation("range", isWithinRange)
 
-	v.RegisterCustomTypeFunc(sqlNullStringType, sql.NullString{})
+	v.RegisterCustomTypeFunc(sqlNullStringTypeConverter, sql.NullString{})
 
 	validatorInstance = &customValidator{v}
 }
@@ -31,5 +32,27 @@ type customValidator struct {
 }
 
 func (mv *customValidator) ValidateStruct(s interface{}) error {
-	return mv.Struct(s)
+	var v reflect.Value
+	if reflect.TypeOf(s).Kind() != reflect.Ptr {
+		v = reflect.ValueOf(s)
+	} else {
+		v = reflect.New(reflect.TypeOf(s).Elem()).Elem()
+		v.Set(reflect.ValueOf(s).Elem())
+	}
+
+	if v.Kind() != reflect.Struct {
+		return &validator.InvalidValidationError{Type: v.Type()}
+	}
+
+	for i := 0; i < v.NumField(); i++ {
+		f := v.Field(i)
+		if f.Type().Kind() != reflect.Ptr {
+			continue
+		}
+		if f.IsNil() {
+			f.Set(reflect.New(f.Type().Elem()))
+		}
+	}
+
+	return mv.Struct(v)
 }
