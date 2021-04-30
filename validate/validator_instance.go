@@ -31,13 +31,15 @@ type customValidator struct {
 	*validator.Validate
 }
 
+// ValidateStruct initialize the value of the nil pointer and validate struct field value
 func (mv *customValidator) ValidateStruct(s interface{}) error {
 	var v reflect.Value
-	if reflect.TypeOf(s).Kind() != reflect.Ptr {
-		v = reflect.ValueOf(s)
-	} else {
+	if reflect.TypeOf(s).Kind() == reflect.Ptr {
 		v = reflect.New(reflect.TypeOf(s).Elem()).Elem()
 		v.Set(reflect.ValueOf(s).Elem())
+	} else {
+		v = reflect.New(reflect.TypeOf(s)).Elem()
+		v.Set(reflect.ValueOf(s))
 	}
 
 	if v.Kind() != reflect.Struct {
