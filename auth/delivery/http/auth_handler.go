@@ -30,6 +30,7 @@ func NewAuthHandler(r *gin.Engine, au domain.AuthUsecase, v validator) {
 	r.POST("parents", h.SignUpParent)
 	r.POST("login/parent", h.LoginParentAuth)
 	r.GET("parents/id/:parent_id/existence", h.CheckIfParentIDExist)
+	r.PATCH("parents/uuid/:parent_uuid", h.UpdateParentInform)
 }
 
 // SendCertifyCodeToPhone deliver data to SendCertifyCodeToPhone of domain.AuthUsecase
@@ -98,12 +99,7 @@ func (ah *authHandler) SignUpParent(c *gin.Context) {
 		},
 	}
 
-	b := make([]byte, req.Profile.Size)
-	file, _ := req.Profile.Open()
-	defer func() { _ = file.Close() }()
-	_, _ = file.Read(b)
-
-	switch uuid, err := ah.aUsecase.SignUpParent(c.Request.Context(), pi, b); tErr := err.(type) {
+	switch uuid, err := ah.aUsecase.SignUpParent(c.Request.Context(), pi, req.Profile); tErr := err.(type) {
 	case nil:
 		resp := defaultResp(http.StatusCreated, 0, "succeed to sign up new parent auth")
 		resp["parent_uuid"] = uuid
@@ -140,7 +136,7 @@ func (ah *authHandler) LoginParentAuth(c *gin.Context) {
 	return
 }
 
-// CheckIfParentIDExist deliver data to CheckIfParentIDExist of domain.AuthUsecase
+// CheckIfParentIDExist deliver data to GetParentInformByID of domain.AuthUsecase
 func (ah *authHandler) CheckIfParentIDExist(c *gin.Context) {
 	req := new(getParentInformByIDRequest)
 	if err := ah.bindRequest(req, c); err != nil {
@@ -156,6 +152,30 @@ func (ah *authHandler) CheckIfParentIDExist(c *gin.Context) {
 		c.JSON(tErr.Status, defaultResp(tErr.Status, tErr.Code, tErr.Error()))
 	default:
 		msg := errors.Wrap(err, "GetParentInformByID return unexpected error").Error()
+		c.JSON(http.StatusInternalServerError, defaultResp(http.StatusInternalServerError, 0, msg))
+	}
+	return
+}
+
+// UpdateParentInform deliver data to UpdateParentInform of domain.AuthUsecase
+func (ah *authHandler) UpdateParentInform(c *gin.Context) {
+	req := new(updateParentInformRequest)
+	if err := ah.bindRequest(req, c); err != nil {
+		c.JSON(http.StatusBadRequest, defaultResp(http.StatusBadRequest, 0, err.Error()))
+		return
+	}
+
+	pa := &domain.ParentAuth{
+		Name: domain.String(domain.StringValue(req.Name)),
+	}
+	switch err := ah.aUsecase.UpdateParentInform(c.Request.Context(), req.ParentUUID, pa, req.Profile); tErr := err.(type) {
+	case nil:
+		resp := defaultResp(http.StatusOK, 0, "succeed to update parent inform")
+		c.JSON(http.StatusOK, resp)
+	case domain.UsecaseError:
+		c.JSON(tErr.Status, defaultResp(tErr.Status, tErr.Code, tErr.Error()))
+	default:
+		msg := errors.Wrap(err, "UpdateParentInform return unexpected error").Error()
 		c.JSON(http.StatusInternalServerError, defaultResp(http.StatusInternalServerError, 0, msg))
 	}
 	return
