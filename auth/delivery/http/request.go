@@ -3,6 +3,7 @@ package http
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"mime/multipart"
 )
 
 // sendCertifyCodeToPhoneRequest is request for authHandler.SendCertifyCodeToPhone
@@ -33,14 +34,15 @@ func (r *certifyPhoneWithCodeRequest) BindFrom(c *gin.Context) error {
 
 // signUpParentRequest is request for authHandler.SignUpParent
 type signUpParentRequest struct {
-	ID          string `json:"id" validate:"required,min=4,max=20"`
-	PW          string `json:"pw" validate:"required,min=6,max=20"`
-	Name        string `json:"name" validate:"required,max=10"`
-	PhoneNumber string `json:"phone_number" validate:"required,len=11"`
+	ParentID    string                `form:"id" validate:"required,min=4,max=20"`
+	ParentPW    string                `form:"pw" validate:"required,min=6,max=20"`
+	Name        string                `form:"name" validate:"required,max=20"`
+	PhoneNumber string                `form:"phone_number" validate:"required,len=11"`
+	Profile     *multipart.FileHeader `form:"profile"`
 }
 
 func (r *signUpParentRequest) BindFrom(c *gin.Context) error {
-	return errors.Wrap(c.BindJSON(r), "failed to BindJSON")
+	return errors.Wrap(c.Bind(r), "failed to Bind")
 }
 
 type loginParentAuthRequest struct {
@@ -50,4 +52,34 @@ type loginParentAuthRequest struct {
 
 func (r *loginParentAuthRequest) BindFrom(c *gin.Context) error {
 	return errors.Wrap(c.BindJSON(r), "failed to BindJSON")
+}
+
+type getParentInformByIDRequest struct {
+	ParentID string `uri:"parent_id" validate:"required"`
+}
+
+func (r *getParentInformByIDRequest) BindFrom(c *gin.Context) error {
+	return errors.Wrap(c.BindUri(r), "failed to BindUri")
+}
+
+type updateParentInformRequest struct {
+	ParentUUID string                `uri:"parent_uuid" validate:"required"`
+	Name       *string               `form:"name" validate:"max=20"`
+	Profile    *multipart.FileHeader `form:"profile"`
+}
+
+func (r *updateParentInformRequest) BindFrom(c *gin.Context) error {
+	if err := c.BindUri(r); err != nil {
+		return errors.Wrap(err, "failed to BindUri")
+	}
+
+	if err := c.Bind(r); err != nil {
+		return errors.Wrap(err, "failed to Bind")
+	}
+
+	if r.Name != nil && *r.Name == "" {
+		return errors.New("name blank is not allowed")
+	}
+
+	return nil
 }

@@ -5,11 +5,11 @@ build:
 .PHONY: image
 image:
 	docker build . -t first-baby-time:${VERSION}
-	docker tag first-baby-time:${VERSION} mspring03/first-baby-time:${VERSION}.RELEASE
+	docker tag first-baby-time:${VERSION} ${DOCKER_USER}/first-baby-time:${VERSION}.RELEASE
 
 .PHONY: upload
 upload:
-	docker push mspring03/first-baby-time:${VERSION}.RELEASE
+	docker push ${DOCKER_USER}/first-baby-time:${VERSION}.RELEASE
 
 .PHONY: deploy
 deploy:
@@ -21,3 +21,7 @@ deploy:
 	} \
 	" \
 	http://54.180.121.144:80/redeploy
+
+.PHONY: stack
+stack:
+	env VERSION=${VERSION} docker stack deploy -c docker-compose.yml FirstBabyTime

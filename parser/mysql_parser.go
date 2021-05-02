@@ -7,7 +7,8 @@ import (
 )
 
 // mysqlMsgParser is used for parse mysql msg
-type mysqlMsgParser struct {}
+type mysqlMsgParser struct{}
+
 func MysqlMsgParser() *mysqlMsgParser { return new(mysqlMsgParser) }
 
 // EntryDuplicate method parse & return entry, key from mysql entry duplicate error message

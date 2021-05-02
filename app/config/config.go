@@ -36,6 +36,15 @@ type appConfig struct {
 
 	// cloudManagementKey represent cloud management key
 	cloudManagementKey *string
+
+	// s3Region represent aws s3 region
+	s3Region *string
+
+	// awsS3ID represent aws s3 id
+	awsS3ID *string
+
+	// awsS3Key represent aws s3 key
+	awsS3Key *string
 }
 
 // ConfigFile return config file get from environment variable
@@ -51,7 +60,6 @@ func (ac *appConfig) ConfigFile() string {
 	}
 	return *ac.configFile
 }
-
 
 // MysqlDataSource return mysql data source name with value get from environment variable
 func (ac *appConfig) MysqlDataSource() string {
@@ -131,6 +139,7 @@ func (ac *appConfig) AligoSender() string {
 	}
 	return *ac.aligoSender
 }
+
 // JwtKey return jwt key get from environment variable
 func (ac *appConfig) JwtKey() string {
 	if ac.jwtKey != nil {
@@ -145,6 +154,7 @@ func (ac *appConfig) JwtKey() string {
 	return *ac.jwtKey
 }
 
+// CloudManagementKey return cloud management key get from environment variable
 func (ac *appConfig) CloudManagementKey() string {
 	if ac.cloudManagementKey != nil {
 		return *ac.cloudManagementKey
@@ -156,6 +166,48 @@ func (ac *appConfig) CloudManagementKey() string {
 		log.Fatal("please set CLOUD_MANAGEMENT_KEY in environment variable")
 	}
 	return *ac.cloudManagementKey
+}
+
+// S3Region return aws s3 region get from environment variable
+func (ac *appConfig) S3Region() string {
+	if ac.s3Region != nil {
+		return *ac.s3Region
+	}
+
+	if viper.IsSet("S3_REGION") {
+		ac.s3Region = _string(viper.GetString("S3_REGION"))
+	} else {
+		log.Fatal("please set S3_REGION in environment variable")
+	}
+	return *ac.s3Region
+}
+
+// AwsS3ID return aws s3 id get from environment variable
+func (ac *appConfig) AwsS3ID() string {
+	if ac.awsS3ID != nil {
+		return *ac.awsS3ID
+	}
+
+	if viper.IsSet("AWS_S3_ID") {
+		ac.awsS3ID = _string(viper.GetString("AWS_S3_ID"))
+	} else {
+		log.Fatal("please set AWS_S3_ID in environment variable")
+	}
+	return *ac.awsS3ID
+}
+
+// AwsS3Key return aws s3 key get from environment variable
+func (ac *appConfig) AwsS3Key() string {
+	if ac.awsS3Key != nil {
+		return *ac.awsS3Key
+	}
+
+	if viper.IsSet("AWS_S3_KEY") {
+		ac.awsS3Key = _string(viper.GetString("AWS_S3_KEY"))
+	} else {
+		log.Fatal("please set AWS_S3_KEY in environment variable")
+	}
+	return *ac.awsS3Key
 }
 
 func _string(s string) *string { return &s }
