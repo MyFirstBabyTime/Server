@@ -22,9 +22,9 @@ import (
 	_authRepo "github.com/MyFirstBabyTime/Server/auth/repository/mysql"
 	_authUcase "github.com/MyFirstBabyTime/Server/auth/usecase"
 
-	_expenditureUcase "github.com/MyFirstBabyTime/Server/chlidcare-expenditure/usecase"
 	_expenditureDelivery "github.com/MyFirstBabyTime/Server/chlidcare-expenditure/delivery/http"
 	_expenditureRepo "github.com/MyFirstBabyTime/Server/chlidcare-expenditure/repository/mysql"
+	_expenditureUcase "github.com/MyFirstBabyTime/Server/chlidcare-expenditure/usecase"
 
 	_cloudMaintainerDelivery "github.com/MyFirstBabyTime/Server/cloud-maintainer/delivery/http"
 	_cloudMaintainerUsecase "github.com/MyFirstBabyTime/Server/cloud-maintainer/usecase"
