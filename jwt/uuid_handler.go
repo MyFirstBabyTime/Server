@@ -1,8 +1,10 @@
 package jwt
 
 import (
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/pkg/errors"
+	"github.com/gin-gonic/gin"
+	"net/http"
 	"time"
 )
 
