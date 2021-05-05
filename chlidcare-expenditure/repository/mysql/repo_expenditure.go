@@ -51,3 +51,20 @@ func ExpenditureRepository(
 	}
 	return repo
 }
+
+func (er *expenditureRepository) GetByUUID(ctx tx.Context, uuid string) (expenditure domain.Expenditure, err error) {
+	_tx, _ := ctx.Tx().(*sqlx.Tx)
+	_sql, args, _ := squirrel.Select("*").
+		From("expenditure").
+		Where("expenditure.uuid = ?", uuid).ToSql()
+
+	switch err = _tx.Get(&expenditure, _sql, args...); err {
+	case nil:
+		break
+	case sql.ErrNoRows:
+		err = domain.ErrRowNotExist{RepoErr: errors.Wrap(err, "failed to select expenditure uuid")}
+	default:
+		err = errors.Wrap(err, "select expenditure return unexpected error")
+	}
+	return
+}
