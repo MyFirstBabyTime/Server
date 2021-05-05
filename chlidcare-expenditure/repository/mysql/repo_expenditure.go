@@ -13,9 +13,10 @@ import (
 )
 
 type expenditureRepository struct {
-	db        *sqlx.DB
-	migrator  migrator
-	validator validator
+	db           *sqlx.DB
+	migrator     migrator
+	sqlMsgParser sqlMsgParser
+	validator    validator
 }
 
 // validator is interface used for validating struct value
