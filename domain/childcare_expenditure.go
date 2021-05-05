@@ -65,3 +65,14 @@ type ExpenditureBabyTag struct {
 func (_ ExpenditureBabyTag) TableName() string {
 	return "expenditure_baby_tag"
 }
+
+func (_ ExpenditureBabyTag) Schema() string {
+	return `CREATE TABLE expenditure_baby_tag (
+		expenditure_uuid 	CHAR(11) 	NOT NULL,
+		baby_uuid			CHAR(11)	NOT NULL,
+		PRIMARY KEY (expenditure_uuid, baby_uuid),
+		FOREIGN KEY (expenditure_uuid)
+			REFERENCES expenditure(uuid)
+			ON DELETE CASCADE
+	);`
+}
