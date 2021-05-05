@@ -66,3 +66,16 @@ func (eh *expenditureHandler) ExpenditureRegistration(c *gin.Context) {
 	}
 	return
 }
+
+// bindRequest method bind *gin.Context to request having BindFrom method
+func (eh *expenditureHandler) bindRequest(req interface {
+	BindFrom(ctx *gin.Context) error
+}, c *gin.Context) error {
+	if err := req.BindFrom(c); err != nil {
+		return errors.Wrap(err, "failed to bind req")
+	}
+	if err := eh.validator.ValidateStruct(req); err != nil {
+		return errors.Wrap(err, "invalid request")
+	}
+	return nil
+}
