@@ -36,4 +36,33 @@ func NewExpenditureHandler(r *gin.Engine, eu domain.ExpenditureUsecase, v valida
 	r.POST("expenditure/registration", h.jwtHandler.ParseUUIDFromToken, h.ExpenditureRegistration)
 }
 
+func (eh *expenditureHandler) ExpenditureRegistration(c *gin.Context) {
+	req := new(expenditureRegistration)
+	if err := eh.bindRequest(req, c); err != nil {
+		c.JSON(http.StatusBadRequest, defaultResp(http.StatusBadRequest, 0, err.Error()))
+		return
+	}
+
+	err := eh.eUsecase.ExpenditureRegistration(c,
+		&domain.Expenditure{
+			ParentUUID: &req.ParentUUID,
+			Name:      	&req.Name,
+			Amount:     &req.Amount,
+			Rating:     &req.Rating,
+			Link:       &req.Link,
+		},
+		&req.BabyUUIDs,
+	)
+
+	switch tErr := err.(type) {
+	case nil:
+		resp := defaultResp(http.StatusOK, 0, "succeed to registration expenditure")
+		c.JSON(http.StatusOK, resp)
+	case domain.UsecaseError:
+		c.JSON(tErr.Status, defaultResp(tErr.Status, tErr.Code, tErr.Error()))
+	default:
+		msg := errors.Wrap(err, "ExpenditureRegistration return unexpected error").Error()
+		c.JSON(http.StatusInternalServerError, defaultResp(http.StatusInternalServerError, 0, msg))
+	}
+	return
 }
