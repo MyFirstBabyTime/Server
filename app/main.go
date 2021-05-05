@@ -77,8 +77,8 @@ func main() {
 	_authHttpDelivery.NewAuthHandler(r, au, _vl)
 
 	eu := _expenditureUcase.ExpenditureUsecase(
-		_expenditureRepo.ExpenditureRepository(db, _vl),
-		_tx, _jwt,
+		_expenditureRepo.ExpenditureRepository(db, _ps, _vl),
+		_tx,
 	)
 	_expenditureDelivery.NewExpenditureHandler(r, eu, _vl)
 
