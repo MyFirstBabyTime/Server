@@ -13,3 +13,7 @@ type expenditureRegistration struct {
 	Rating     int64    `json:"rating" validate:"required,range=0~5"`
 	Link       string   `json:"link"`
 }
+
+func (r *expenditureRegistration) BindFrom(c *gin.Context) error {
+	return errors.Wrap(c.BindJSON(r), "failed to BindJSON")
+}
