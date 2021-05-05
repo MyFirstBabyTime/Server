@@ -26,7 +26,7 @@ type Expenditure struct {
 }
 
 // TableName return table name about Expenditure model
-func (e Expenditure) TableName() string {
+func (_ Expenditure) TableName() string {
 	return "expenditure"
 }
 
