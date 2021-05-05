@@ -18,3 +18,12 @@ type expenditureHandler struct {
 type validator interface {
 	ValidateStruct(s interface{}) (err error)
 }
+
+// jwtHandler is interface of jwt handler
+type jwtHandler interface {
+	// ParseUUIDFromToken parse token & return token payload and type
+	ParseUUIDFromToken (c *gin.Context)
+}
+
+}
+}
