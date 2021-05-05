@@ -45,5 +45,9 @@ func ExpenditureRepository(
 	if err := repo.migrator.MigrateModel(repo.db, domain.Expenditure{}); err != nil {
 		log.Fatal(errors.Wrap(err, "failed to migrate parent auth model").Error())
 	}
+
+	if err := repo.migrator.MigrateModel(repo.db, domain.ExpenditureBabyTag{}); err != nil {
+		log.Fatal(errors.Wrap(err, "failed to migrate parent auth model").Error())
+	}
 	return repo
 }
