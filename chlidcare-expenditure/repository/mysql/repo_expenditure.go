@@ -30,8 +30,10 @@ type validator interface {
 	ValidateStruct(s interface{}) (err error)
 }
 
+// ExpenditureRepository return implementation of domain.ExpenditureRepository using mysql
 func ExpenditureRepository(
 	db *sqlx.DB,
+	sp sqlMsgParser,
 	v validator,
 ) domain.ExpenditureRepository {
 	repo := &expenditureRepository{
