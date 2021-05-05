@@ -7,3 +7,11 @@ import (
 	"github.com/pkg/errors"
 	"net/http"
 )
+
+type expenditureUsecase struct {
+	// expenditureRepository is repository interface about domain.ExpenditureRepository
+	expenditureRepository domain.ExpenditureRepository
+
+	// txHandler is used for handling transaction to begin & commit or rollback
+	txHandler txHandler
+}
