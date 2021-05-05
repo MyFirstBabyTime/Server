@@ -68,3 +68,71 @@ func (er *expenditureRepository) GetByUUID(ctx tx.Context, uuid string) (expendi
 	}
 	return
 }
+
+func (er *expenditureRepository) Store(ctx tx.Context, e *domain.Expenditure, babyUUIDs *[]string) (err error) {
+	if e.UUID == nil {
+		if e.UUID, err = er.GetAvailableUUID(ctx); err != nil {
+			err = errors.Wrap(err, "failed to getAvailableUUID")
+			return
+		}
+	}
+
+	_tx, _ := ctx.Tx().(*sqlx.Tx)
+	_sql, args, _ := squirrel.Insert("expenditure").
+		Columns("uuid", "parent_uuid", "name", "amount", "rating", "link").
+		Values(e.UUID, e.ParentUUID, e.Name, e.Amount, e.Rating, e.Link).ToSql()
+
+	switch _, err = _tx.Exec(_sql, args...); tErr := err.(type) {
+	case nil:
+		break
+	case *mysql.MySQLError:
+		switch tErr.Number {
+		case mysqlerr.ER_NO_REFERENCED_ROW_2:
+			err = errors.Wrap(err, "failed to insert expenditure")
+			fk := er.sqlMsgParser.NoReferencedRow(tErr.Message)
+			err = domain.ErrNoReferencedRow{RepoErr: err, ForeignKey: fk}
+			return
+		default:
+			err = errors.Wrap(err, "insert expenditure unexpected mysql error")
+			return
+		}
+	default:
+		err = errors.Wrap(err, "insert expenditure return unexpected error")
+		return
+	}
+
+	for _, babyUUID := range *babyUUIDs {
+		_sql, args, _ = squirrel.Insert("expenditure_baby_tag").
+			Columns("expenditure_uuid", "baby_uuid").
+			Values(*e.UUID, babyUUID).ToSql()
+
+		_, err = _tx.Exec(_sql, args...)
+		if err != nil { break }
+	}
+
+	switch tErr := err.(type) {
+	case nil:
+		break
+	case *mysql.MySQLError:
+		switch tErr.Number {
+		case mysqlerr.ER_NO_REFERENCED_ROW_2:
+			err = errors.Wrap(err, "failed to insert expenditure_baby_tag")
+			fk := er.sqlMsgParser.NoReferencedRow(tErr.Message)
+			err = domain.ErrNoReferencedRow{RepoErr: err, ForeignKey: fk}
+			return
+		case mysqlerr.ER_DUP_ENTRY:
+			err = errors.Wrap(err, "failed to insert expenditure_baby_tag")
+			_, key := er.sqlMsgParser.EntryDuplicate(tErr.Message)
+			err = domain.ErrEntryDuplicate{RepoErr: err, DuplicateKey: key}
+			return
+		default:
+			err = errors.Wrap(err, "insert expenditure_baby_tag unexpected mysql error")
+			return
+		}
+	default:
+		err = errors.Wrap(err, "insert expenditure_baby_tag return unexpected error")
+		return
+	}
+
+	return
+}
