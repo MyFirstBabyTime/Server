@@ -55,3 +55,8 @@ func (e Expenditure) GenerateRandomUUID() string {
 	}
 	return fmt.Sprintf("e%s", string(random))
 }
+
+type ExpenditureBabyTag struct {
+	ExpenditureUUID *string `db:"expenditure_uuid" validate:"required uuid=item"`
+	BabyUUID        *string `db:"baby_uuid" validate:"required uuid=baby"`
+}
