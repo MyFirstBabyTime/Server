@@ -15,3 +15,14 @@ type expenditureUsecase struct {
 	// txHandler is used for handling transaction to begin & commit or rollback
 	txHandler txHandler
 }
+
+func ExpenditureUsecase(
+	er domain.ExpenditureRepository,
+	th txHandler,
+) *expenditureUsecase {
+	return &expenditureUsecase{
+		expenditureRepository: er,
+
+		txHandler:  th,
+	}
+}
