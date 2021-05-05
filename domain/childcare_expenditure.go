@@ -30,16 +30,15 @@ func (_ Expenditure) TableName() string {
 	return "expenditure"
 }
 
-func (e Expenditure) Schema() string {
+func (_ Expenditure) Schema() string {
 	return `CREATE TABLE expenditure (
 		uuid 		CHAR(11) 	NOT NULL,
 		parent_uuid CHAR(11)	NOT NULL,
-		baby_uuid	CHAR(11)    NOT NULL,
 		name 		VARCHAR(20) NOT NULL,
 		amount 		INT(15) 	NOT NULL,
 		rating 		INT(1) 		NOT NULL,
 		link 		VARCHAR(100),
-		PRIMARY KEY (uuid)
+		PRIMARY KEY (uuid),
 		FOREIGN KEY (parent_uuid)
 			REFERENCES parent_auth(uuid)
 			ON DELETE CASCADE
