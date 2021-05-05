@@ -79,3 +79,12 @@ func (eh *expenditureHandler) bindRequest(req interface {
 	}
 	return nil
 }
+
+// defaultResp return response have status, code, message inform
+func defaultResp(status, code int, msg string) (resp gin.H) {
+	resp = gin.H{}
+	resp["status"] = status
+	resp["code"] = code
+	resp["message"] = msg
+	return
+}
