@@ -60,3 +60,8 @@ type ExpenditureBabyTag struct {
 	ExpenditureUUID *string `db:"expenditure_uuid" validate:"required uuid=item"`
 	BabyUUID        *string `db:"baby_uuid" validate:"required uuid=baby"`
 }
+
+// TableName return table name about Expenditure model
+func (_ ExpenditureBabyTag) TableName() string {
+	return "expenditure_baby_tag"
+}
