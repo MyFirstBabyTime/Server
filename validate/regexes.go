@@ -9,5 +9,5 @@ const (
 
 var (
 	parentUUIDRegex = regexp.MustCompile(parentUUIDRegexString)
-	itemUUIDRegx    = regexp.MustCompile(itemUUIDRegexString)
+	itemUUIDRegex   = regexp.MustCompile(itemUUIDRegexString)
 )
