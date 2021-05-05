@@ -17,6 +17,8 @@ func isValidateUUID(fl validator.FieldLevel) bool {
 	switch fl.Param() {
 	case "parent":
 		return parentUUIDRegex.MatchString(fl.Field().String())
+	case "item":
+		return itemUUIDRegex.MatchString(fl.Field().String())
 	}
 	return false
 }
