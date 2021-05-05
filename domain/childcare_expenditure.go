@@ -9,7 +9,7 @@ import (
 )
 
 type ExpenditureUsecase interface {
-}
+	ExpenditureRegistration(ctx context.Context, req *Expenditure, babyUUIDs *[]string) (err error)}
 
 type ExpenditureRepository interface {
 }
