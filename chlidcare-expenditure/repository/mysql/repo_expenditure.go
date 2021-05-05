@@ -136,3 +136,20 @@ func (er *expenditureRepository) Store(ctx tx.Context, e *domain.Expenditure, ba
 
 	return
 }
+
+func (er *expenditureRepository) GetAvailableUUID(ctx tx.Context) (*string, error) {
+	e := new(domain.Expenditure)
+
+	for {
+		uuid := e.GenerateRandomUUID()
+		_, err := er.GetByUUID(ctx, uuid)
+
+		if err == nil {
+			continue
+		} else if _, ok := err.(domain.ErrRowNotExist); ok {
+			return &uuid, nil
+		} else {
+			return nil, errors.Wrap(err, "failed to GetByUUID")
+		}
+	}
+}
