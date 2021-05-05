@@ -35,8 +35,9 @@ func ExpenditureRepository(
 	v validator,
 ) domain.ExpenditureRepository {
 	repo := &expenditureRepository{
-		db:        db,
-		validator: v,
+		db:           db,
+		sqlMsgParser: sp,
+		validator:    v,
 	}
 
 	if err := repo.migrator.MigrateModel(repo.db, domain.Expenditure{}); err != nil {
