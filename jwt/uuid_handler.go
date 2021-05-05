@@ -39,18 +39,24 @@ func (uh *uuidHandler) GenerateUUIDJWT(uuid, _type string, t time.Duration) (tok
 }
 
 // ParseUUIDFromToken parse uuid & type from token received from parameter
-func (uh *uuidHandler) ParseUUIDFromToken(s string) (uuid, _type string, err error) {
-	token, err := jwt.ParseWithClaims(s, &uuidClaims{}, func(t *jwt.Token) (interface{}, error) {
+func (uh *uuidHandler) ParseUUIDFromToken (c *gin.Context) {
+	accessToken := c.Request.Header["Authorization"][0]
+
+	token, err := jwt.ParseWithClaims(accessToken, &uuidClaims{}, func(t *jwt.Token) (interface{}, error) {
 		return []byte(uh.jwtKey), nil
 	})
+	fmt.Println(token, err)
+
 	if err != nil {
-		err = errors.Wrap(err, "failed to ParseWithClaims")
+		c.JSON(http.StatusUnauthorized, defaultResp(http.StatusUnauthorized, 0, err.Error()))
+		c.Abort()
 		return
 	}
 
 	claims, ok := token.Claims.(*uuidClaims)
 	if !ok || !token.Valid {
-		err = errors.Wrap(err, "failed to assert to *uuidClaims")
+		c.JSON(http.StatusUnauthorized, defaultResp(http.StatusUnauthorized, 0, err.Error()))
+		c.Abort()
 		return
 	}
 
