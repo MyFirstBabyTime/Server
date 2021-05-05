@@ -25,5 +25,15 @@ type jwtHandler interface {
 	ParseUUIDFromToken (c *gin.Context)
 }
 
+// NewExpenditureHandler vil initialize the expenditure endpoint
+func NewExpenditureHandler(r *gin.Engine, eu domain.ExpenditureUsecase, v validator, jh jwtHandler) {
+	h := &expenditureHandler{
+		eUsecase:  eu,
+		validator: v,
+		jwtHandler: jh,
+	}
+
+	r.POST("expenditure/registration", h.jwtHandler.ParseUUIDFromToken, h.ExpenditureRegistration)
 }
+
 }
