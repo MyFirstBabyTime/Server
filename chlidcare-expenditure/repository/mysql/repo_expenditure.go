@@ -19,6 +19,12 @@ type expenditureRepository struct {
 	validator    validator
 }
 
+// sqlMsgParser is interface used for parse sql result message
+type sqlMsgParser interface {
+	EntryDuplicate(msg string) (entry, key string)
+	NoReferencedRow(msg string) (fk string)
+}
+
 // validator is interface used for validating struct value
 type validator interface {
 	ValidateStruct(s interface{}) (err error)
