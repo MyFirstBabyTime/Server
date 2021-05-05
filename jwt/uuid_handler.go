@@ -60,7 +60,9 @@ func (uh *uuidHandler) ParseUUIDFromToken (c *gin.Context) {
 		return
 	}
 
-	uuid = claims.UUID
-	_type = claims.Type
+	c.Set("uuid", claims.UUID)
+	c.Set("_type", claims.Type)
+}
+
 	return
 }
