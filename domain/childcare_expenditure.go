@@ -12,6 +12,7 @@ type ExpenditureUsecase interface {
 	ExpenditureRegistration(ctx context.Context, req *Expenditure, babyUUIDs *[]string) (err error)}
 
 type ExpenditureRepository interface {
+	Store(ctx tx.Context, e *Expenditure, babyUUIDs *[]string) (err error)
 }
 
 // Expenditure is model represent expenditure using in child_expenditure domain
