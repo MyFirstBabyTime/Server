@@ -1,15 +1,20 @@
 package mysql
 
 import (
-	"github.com/MyFirstBabyTime/Server/domain"
+	"database/sql"
+	"github.com/Masterminds/squirrel"
+	"github.com/VividCortex/mysqlerr"
+	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"log"
+
+	"github.com/MyFirstBabyTime/Server/domain"
+	"github.com/MyFirstBabyTime/Server/tx"
 )
 
 // childrenRepository is implementation of domain.ChildrenRepository using mysql
 type childrenRepository struct {
-	domain.ChildrenRepository
 	myCfg childrenRepositoryConfig
 
 	db           *sqlx.DB
@@ -50,6 +55,40 @@ func ChildrenRepository(
 		log.Fatal(errors.Wrap(err, "failed to migrate parent children model").Error())
 	}
 	return repo
+}
+
+// Store is implement Store method of domain.ChildrenRepository interface
+func (cr *childrenRepository) Store(ctx tx.Context, c *domain.Children) (err error) {
+	if domain.StringValue(c.UUID) == "" {
+		if c.UUID, err = cr.GetAvailableUUID(ctx); err != nil {
+			return errors.Wrap(err, "failed to GetAvailableUUID")
+		}
+	}
+
+	if err = cr.validator.ValidateStruct(c); err != nil {
+		return domain.ErrInvalidModel{RepoErr: errors.Wrap(err, "failed to validate domain.Children")}
+	}
+
+	_tx, _ := ctx.Tx().(*sqlx.Tx)
+	_sql, args, _ := squirrel.Insert("children").Columns("uuid", "parent_uuid", "name", "birth", "sex", "profile_uri").
+		Values(c.UUID, c.ParentUUID, c.Name, c.Birth, c.Sex, c.ProfileUri).ToSql()
+
+	switch _, err = _tx.Exec(_sql, args...); tErr := err.(type) {
+	case nil:
+		break
+	case *mysql.MySQLError:
+		switch tErr.Number {
+		case mysqlerr.ER_NO_REFERENCED_ROW_2:
+			err = errors.Wrap(err, "failed to insert children")
+			fk := cr.sqlMsgParser.NoReferencedRow(tErr.Message)
+			err = domain.ErrNoReferencedRow{RepoErr: err, ForeignKey: fk}
+		default:
+			err = errors.Wrap(err, "insert children return unexpected code return")
+		}
+	default:
+		err = errors.Wrap(err, "insert children return unexpected error type")
+	}
+	return
 }
 
 // GetByUUID is implement GetByUUID method of domain.ChildrenRepository interface
