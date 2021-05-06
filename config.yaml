@@ -16,3 +16,6 @@ app:
 auth:
   accessTokenDuration: "24h"
   parentProfileS3Bucket: "first-baby-time"
+
+children:
+  childrenProfileS3Bucket: "first-baby-time"
