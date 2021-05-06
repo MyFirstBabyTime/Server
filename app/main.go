@@ -87,7 +87,7 @@ func main() {
 		_authRepo.ParentPhoneCertifyRepository(_authConfig.App, db, _ps, _vl),
 		_tx, _msg, _hash, _jwt, _s3,
 	)
-	_authHttpDelivery.NewAuthHandler(r, au, _vl)
+	_authHttpDelivery.NewAuthHandler(r, au, _vl, _jwt)
 
 	eu := _expenditureUcase.ExpenditureUsecase(
 		_expenditureRepo.ExpenditureRepository(db, _ps, _vl),
