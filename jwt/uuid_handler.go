@@ -4,6 +4,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -45,6 +46,10 @@ func (uh *uuidHandler) ParseUUIDFromToken(c *gin.Context) {
 	} else {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, defaultResp(http.StatusUnauthorized, 0, "Authorization not set"))
 		return
+	}
+
+	if strings.Contains(tokenStr, "Bearer") {
+		tokenStr = strings.Join(strings.Split(strings.TrimPrefix(tokenStr, "Bearer"), " "), "")
 	}
 
 	token, err := jwt.ParseWithClaims(tokenStr, &uuidClaims{}, func(t *jwt.Token) (interface{}, error) {
