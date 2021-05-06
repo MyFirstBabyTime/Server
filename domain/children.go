@@ -2,9 +2,12 @@ package domain
 
 import (
 	"context"
-	"github.com/MyFirstBabyTime/Server/tx"
+	"fmt"
+	"math/rand"
 	"mime/multipart"
 	"time"
+
+	"github.com/MyFirstBabyTime/Server/tx"
 )
 
 // ChildrenUsecase is interface about usecase layer using in delivery layer
@@ -14,6 +17,8 @@ type ChildrenUsecase interface {
 
 // ChildrenRepository is repository interface about Children model
 type ChildrenRepository interface {
+	GetByUUID(ctx tx.Context, uuid string) (children Children, err error)
+	GetAvailableUUID(ctx tx.Context) (*string, error)
 	Store(ctx tx.Context, c *Children) error
 }
 
