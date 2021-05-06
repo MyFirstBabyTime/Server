@@ -9,8 +9,15 @@ import (
 
 // authHandler represent the http handler for article
 type authHandler struct {
-	aUsecase  domain.AuthUsecase
-	validator validator
+	aUsecase   domain.AuthUsecase
+	validator  validator
+	jwtHandler jwtHandler
+}
+
+// jwtHandler is interface of jwt handler
+type jwtHandler interface {
+	// ParseUUIDFromToken parse token & return token payload and type
+	ParseUUIDFromToken(c *gin.Context)
 }
 
 // validator is interface used for validating struct value
@@ -19,10 +26,11 @@ type validator interface {
 }
 
 // NewAuthHandler will initialize the auth/ resources endpoint
-func NewAuthHandler(r *gin.Engine, au domain.AuthUsecase, v validator) {
+func NewAuthHandler(r *gin.Engine, au domain.AuthUsecase, v validator, jh jwtHandler) {
 	h := &authHandler{
-		aUsecase:  au,
-		validator: v,
+		aUsecase:   au,
+		validator:  v,
+		jwtHandler: jh,
 	}
 
 	r.POST("phones/phone-number/:phone_number/certify-code", h.SendCertifyCodeToPhone)
@@ -30,7 +38,7 @@ func NewAuthHandler(r *gin.Engine, au domain.AuthUsecase, v validator) {
 	r.POST("parents", h.SignUpParent)
 	r.POST("login/parent", h.LoginParentAuth)
 	r.GET("parents/id/:parent_id/existence", h.CheckIfParentIDExist)
-	r.PATCH("parents/uuid/:parent_uuid", h.UpdateParentInform)
+	r.PATCH("parents/uuid/:parent_uuid", h.jwtHandler.ParseUUIDFromToken, h.UpdateParentInform)
 }
 
 // SendCertifyCodeToPhone deliver data to SendCertifyCodeToPhone of domain.AuthUsecase
