@@ -9,8 +9,8 @@ import (
 
 //expenditureHandler represent the http handler for article
 type expenditureHandler struct {
-	eUsecase  domain.ExpenditureUsecase
-	validator validator
+	eUsecase   domain.ExpenditureUsecase
+	validator  validator
 	jwtHandler jwtHandler
 }
 
@@ -22,14 +22,14 @@ type validator interface {
 // jwtHandler is interface of jwt handler
 type jwtHandler interface {
 	// ParseUUIDFromToken parse token & return token payload and type
-	ParseUUIDFromToken (c *gin.Context)
+	ParseUUIDFromToken(c *gin.Context)
 }
 
 // NewExpenditureHandler vil initialize the expenditure endpoint
 func NewExpenditureHandler(r *gin.Engine, eu domain.ExpenditureUsecase, v validator, jh jwtHandler) {
 	h := &expenditureHandler{
-		eUsecase:  eu,
-		validator: v,
+		eUsecase:   eu,
+		validator:  v,
 		jwtHandler: jh,
 	}
 
@@ -46,7 +46,7 @@ func (eh *expenditureHandler) ExpenditureRegistration(c *gin.Context) {
 	err := eh.eUsecase.ExpenditureRegistration(c,
 		&domain.Expenditure{
 			ParentUUID: &req.ParentUUID,
-			Name:      	&req.Name,
+			Name:       &req.Name,
 			Amount:     &req.Amount,
 			Rating:     &req.Rating,
 			Link:       &req.Link,

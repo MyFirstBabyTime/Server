@@ -107,7 +107,9 @@ func (er *expenditureRepository) Store(ctx tx.Context, e *domain.Expenditure, ba
 			Values(*e.UUID, babyUUID).ToSql()
 
 		_, err = _tx.Exec(_sql, args...)
-		if err != nil { break }
+		if err != nil {
+			break
+		}
 	}
 
 	switch tErr := err.(type) {
