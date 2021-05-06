@@ -82,9 +82,7 @@ func main() {
 	)
 	_expenditureDelivery.NewExpenditureHandler(r, eu, _vl, _jwt)
 
-	cmu := _cloudMaintainerUsecase.CloudMaintainerUsecase(
-		config.App.CloudManagementKey(),
-	)
+	cmu := _cloudMaintainerUsecase.CloudMaintainerUsecase(config.App)
 	_cloudMaintainerDelivery.NewCloudMaintainerHandler(r, cmu, _vl)
 
 	log.Fatal(r.Run(":80"))
