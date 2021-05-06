@@ -69,7 +69,7 @@ func (er *expenditureRepository) GetByUUID(ctx tx.Context, uuid string) (expendi
 	return
 }
 
-func (er *expenditureRepository) Store(ctx tx.Context, e *domain.Expenditure, babyUUIDs *[]string) (err error) {
+func (er *expenditureRepository) Store(ctx tx.Context, e *domain.Expenditure, babyUUIDs []string) (err error) {
 	if e.UUID == nil {
 		if e.UUID, err = er.GetAvailableUUID(ctx); err != nil {
 			err = errors.Wrap(err, "failed to getAvailableUUID")
@@ -101,10 +101,10 @@ func (er *expenditureRepository) Store(ctx tx.Context, e *domain.Expenditure, ba
 		return
 	}
 
-	for _, babyUUID := range *babyUUIDs {
+	for _, babyUUID := range babyUUIDs {
 		_sql, args, _ = squirrel.Insert("expenditure_baby_tag").
 			Columns("expenditure_uuid", "baby_uuid").
-			Values(*e.UUID, babyUUID).ToSql()
+			Values(domain.StringValue(e.UUID), babyUUID).ToSql()
 
 		_, err = _tx.Exec(_sql, args...)
 		if err != nil {

@@ -43,16 +43,13 @@ func (eh *expenditureHandler) ExpenditureRegistration(c *gin.Context) {
 		return
 	}
 
-	err := eh.eUsecase.ExpenditureRegistration(c,
-		&domain.Expenditure{
-			ParentUUID: &req.ParentUUID,
-			Name:       &req.Name,
-			Amount:     &req.Amount,
-			Rating:     &req.Rating,
-			Link:       &req.Link,
-		},
-		&req.BabyUUIDs,
-	)
+	err := eh.eUsecase.ExpenditureRegistration(c, &domain.Expenditure{
+		ParentUUID: domain.String(req.ParentUUID),
+		Name:       domain.String(req.Name),
+		Amount:     domain.Int64(req.Amount),
+		Rating:     domain.Int64(req.Rating),
+		Link:       domain.String(req.Link),
+	}, req.BabyUUIDs)
 
 	switch tErr := err.(type) {
 	case nil:
