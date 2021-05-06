@@ -5,16 +5,13 @@ go 1.16
 require (
 	github.com/Masterminds/squirrel v1.5.0
 	github.com/VividCortex/mysqlerr v0.0.0-20201215173831-4c396ae82aac
+	github.com/aws/aws-sdk-go v1.38.33
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.1
 	github.com/go-playground/validator/v10 v10.4.1
 	github.com/go-sql-driver/mysql v1.5.1-0.20200311113236-681ffa848bae
-	github.com/google/go-cmp v0.4.0 // indirect
 	github.com/jmoiron/sqlx v1.3.3
-	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/olivere/elastic v6.2.35+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.7.0 // indirect
