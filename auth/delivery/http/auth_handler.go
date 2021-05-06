@@ -173,6 +173,11 @@ func (ah *authHandler) UpdateParentInform(c *gin.Context) {
 		return
 	}
 
+	if c.GetString("uuid") != req.ParentUUID {
+		c.JSON(http.StatusForbidden, defaultResp(http.StatusForbidden, 0, "you can't access with that uuid token"))
+		return
+	}
+
 	pa := &domain.ParentAuth{
 		Name: domain.String(domain.StringValue(req.Name)),
 	}
