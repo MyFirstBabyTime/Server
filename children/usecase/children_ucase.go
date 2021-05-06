@@ -2,6 +2,10 @@ package usecase
 
 import (
 	"context"
+	"github.com/pkg/errors"
+	"mime/multipart"
+	"net/http"
+
 	"github.com/MyFirstBabyTime/Server/domain"
 	"github.com/MyFirstBabyTime/Server/tx"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -9,7 +13,6 @@ import (
 
 // childrenUsecase is used for usecase layer which implement domain.ChildrenUsecase interface
 type childrenUsecase struct {
-	domain.ChildrenUsecase
 	// myCfg is used for get config value for children usecase
 	myCfg childrenUsecaseConfig
 
@@ -59,4 +62,53 @@ type txHandler interface {
 type s3Agency interface {
 	// PutObject method put(insert or update) object to s3
 	PutObject(input *s3.PutObjectInput) (output *s3.PutObjectOutput, err error)
+}
+
+func (cu *childrenUsecase) CreateNewChildren(ctx context.Context, c *domain.Children, profile *multipart.FileHeader) (uuid string, err error) {
+	_tx, err := cu.txHandler.BeginTx(ctx, nil)
+	if err != nil {
+		err = errors.Wrap(err, "failed to begin transaction")
+		return
+	}
+
+	if domain.StringValue(c.UUID) == "" {
+		if c.UUID, err = cu.childrenRepository.GetAvailableUUID(_tx); err != nil {
+			err = domain.UsecaseError{UsecaseErr: errors.Wrap(err, "failed to GetAvailableUUID"), Status: http.StatusInternalServerError}
+			_ = cu.txHandler.Rollback(_tx)
+			return
+		}
+	}
+
+	switch err = cu.childrenRepository.Store(_tx, c); tErr := err.(type) {
+	case nil:
+		break
+	case domain.ErrInvalidModel:
+		err = errors.Wrap(err, "children Store return invalid model")
+		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
+		_ = cu.txHandler.Rollback(_tx)
+		return
+	case domain.ErrNoReferencedRow:
+		switch tErr.ForeignKey {
+		case "parent_uuid":
+			err = errors.New("parent with that uuid is not exist")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusNotFound}
+			_ = cu.txHandler.Rollback(_tx)
+			return
+		default:
+			err = errors.Wrap(err, "children Store return unexpected no referenced error")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
+			_ = cu.txHandler.Rollback(_tx)
+			return
+		}
+	default:
+		err = errors.Wrap(err, "children Store return unexpected error")
+		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
+		_ = cu.txHandler.Rollback(_tx)
+		return
+	}
+
+	uuid = domain.StringValue(c.UUID)
+	err = nil
+	_ = cu.txHandler.Commit(_tx)
+	return
 }
