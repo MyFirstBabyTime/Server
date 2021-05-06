@@ -77,8 +77,8 @@ func (r *updateParentInformRequest) BindFrom(c *gin.Context) error {
 		return errors.Wrap(err, "failed to Bind")
 	}
 
-	if r.Name != nil && *r.Name == "" {
-		return errors.New("name blank is not allowed")
+	if r.Name == nil && r.Profile == nil {
+		return errors.New("all field blank is not allowed")
 	}
 
 	return nil
