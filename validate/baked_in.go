@@ -10,15 +10,13 @@ import (
 
 // isValidateUUID function return if uuid format is validate
 func isValidateUUID(fl validator.FieldLevel) bool {
-	if fl.Field().String() == "" {
-		return true
-	}
-
 	switch fl.Param() {
 	case "parent":
 		return parentUUIDRegex.MatchString(fl.Field().String())
 	case "item":
 		return itemUUIDRegex.MatchString(fl.Field().String())
+	case "children":
+		return childrenRegex.MatchString(fl.Field().String())
 	}
 	return false
 }
