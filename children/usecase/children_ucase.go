@@ -23,6 +23,23 @@ type childrenUsecase struct {
 	s3Agency s3Agency
 }
 
+// ChildrenUsecase return implementation of domain.ChildrenUsecase
+func ChildrenUsecase(
+	cfg childrenUsecaseConfig,
+	cr domain.ChildrenRepository,
+	th txHandler,
+	sa s3Agency,
+) domain.ChildrenUsecase {
+	return &childrenUsecase{
+		myCfg: cfg,
+
+		childrenRepository: cr,
+
+		txHandler: th,
+		s3Agency:  sa,
+	}
+}
+
 // childrenUsecaseConfig is interface get config value for children usecase
 type childrenUsecaseConfig interface {}
 
