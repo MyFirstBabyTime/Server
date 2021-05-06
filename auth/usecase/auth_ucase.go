@@ -1,10 +1,13 @@
 package usecase
 
 import (
+	"bytes"
 	"context"
-	"database/sql"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/pkg/errors"
+	"mime/multipart"
 	"net/http"
 	"time"
 
@@ -34,6 +37,9 @@ type authUsecase struct {
 
 	// jwtHandler is used as handler about jwt
 	jwtHandler jwtHandler
+
+	// s3Agency is used as agency about aws s3 API
+	s3Agency s3Agency
 }
 
 // AuthUsecase return implementation of domain.AuthUsecase
@@ -45,6 +51,7 @@ func AuthUsecase(
 	ma messageAgency,
 	hh hashHandler,
 	jh jwtHandler,
+	sa s3Agency,
 ) domain.AuthUsecase {
 	return &authUsecase{
 		myCfg: cfg,
@@ -56,6 +63,7 @@ func AuthUsecase(
 		messageAgency: ma,
 		hashHandler:   hh,
 		jwtHandler:    jh,
+		s3Agency:      sa,
 	}
 }
 
@@ -63,6 +71,9 @@ func AuthUsecase(
 type authUsecaseConfig interface {
 	// AccessTokenDuration return access token valid duration
 	AccessTokenDuration() time.Duration
+
+	// ParentProfileS3Bucket return aws s3 bucket name for parent profile
+	ParentProfileS3Bucket() string
 }
 
 // txHandler is used for handling transaction to begin & commit or rollback
@@ -98,7 +109,13 @@ type jwtHandler interface {
 	GenerateUUIDJWT(uuid, _type string, t time.Duration) (token string, err error)
 }
 
-// SendCertifyCodeToPhone is implement domain.AuthUsecase interface
+// s3Agency is agency that agent various API about aws s3
+type s3Agency interface {
+	// PutObject method put(insert or update) object to s3
+	PutObject(input *s3.PutObjectInput) (output *s3.PutObjectOutput, err error)
+}
+
+// SendCertifyCodeToPhone implement SendCertifyCodeToPhone method of domain.AuthUsecase interface
 func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (err error) {
 	_tx, err := au.txHandler.BeginTx(ctx, nil)
 	if err != nil {
@@ -107,16 +124,17 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 	}
 
 	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, pn)
+	ppc = domain.ParentPhoneCertify{PhoneNumber: domain.String(pn)}
 	switch err.(type) {
 	case nil:
-		if ppc.ParentUUID.Valid {
+		if domain.StringValue(ppc.ParentUUID) != "" {
 			err = errors.New("this phone number is already in use")
 			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusConflict, Code: domain.PhoneAlreadyInUse}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
-		ppc.CertifyCode = ppc.GenerateCertifyCode()
-		ppc.Certified = sql.NullBool{Bool: false, Valid: true}
+		ppc.CertifyCode = domain.Int64(ppc.GenerateCertifyCode())
+		ppc.Certified = domain.Bool(false)
 		switch err = au.parentPhoneCertifyRepository.Update(_tx, &ppc); err.(type) {
 		case nil:
 			break
@@ -127,8 +145,7 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 			return
 		}
 	case domain.ErrRowNotExist:
-		ppc = domain.ParentPhoneCertify{PhoneNumber: pn}
-		ppc.CertifyCode = ppc.GenerateCertifyCode()
+		ppc.CertifyCode = domain.Int64(ppc.GenerateCertifyCode())
 		switch err = au.parentPhoneCertifyRepository.Store(_tx, &ppc); err.(type) {
 		case nil:
 			break
@@ -146,7 +163,7 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 	}
 
 	content := fmt.Sprintf("[육아는 처음이지 인증 번호]\n회원가입 인증 번호: %d", ppc.CertifyCode)
-	if err = au.messageAgency.SendSMSToOne(ppc.PhoneNumber, content); err != nil {
+	if err = au.messageAgency.SendSMSToOne(domain.StringValue(ppc.PhoneNumber), content); err != nil {
 		err = errors.Wrap(err, "SendSMSToOne return unexpected error")
 		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 		_ = au.txHandler.Rollback(_tx)
@@ -157,7 +174,7 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 	return nil
 }
 
-// CertifyPhoneWithCode is implement domain.AuthUsecase interface
+// CertifyPhoneWithCode implement CertifyPhoneWithCode method of domain.AuthUsecase interface
 func (au *authUsecase) CertifyPhoneWithCode(ctx context.Context, pn string, code int64) (err error) {
 	_tx, err := au.txHandler.BeginTx(ctx, nil)
 	if err != nil {
@@ -168,19 +185,19 @@ func (au *authUsecase) CertifyPhoneWithCode(ctx context.Context, pn string, code
 	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, pn)
 	switch err.(type) {
 	case nil:
-		if ppc.Certified.Valid && ppc.Certified.Bool {
+		if domain.BoolValue(ppc.Certified) == true {
 			err = errors.New("this phone number is already certified")
 			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusConflict, Code: domain.PhoneAlreadyCertified}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
-		if code != ppc.CertifyCode {
+		if code != domain.Int64Value(ppc.CertifyCode) {
 			err = errors.New("incorrect certify code to that phone number")
 			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusConflict, Code: domain.IncorrectCertifyCode}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
-		ppc.Certified = sql.NullBool{Bool: true, Valid: true}
+		ppc.Certified = domain.Bool(true)
 		switch err = au.parentPhoneCertifyRepository.Update(_tx, &ppc); err.(type) {
 		case nil:
 			break
@@ -206,32 +223,45 @@ func (au *authUsecase) CertifyPhoneWithCode(ctx context.Context, pn string, code
 	return nil
 }
 
-// SignUpParent is implement domain.AuthUsecase interface
-func (au *authUsecase) SignUpParent(ctx context.Context, pa *domain.ParentAuth, pn string) (err error) {
+// SignUpParent implement SignUpParent method of domain.AuthUsecase interface
+func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
+	*domain.ParentAuth
+	*domain.ParentPhoneCertify
+}, profile *multipart.FileHeader) (uuid string, err error) {
 	_tx, err := au.txHandler.BeginTx(ctx, nil)
 	if err != nil {
 		err = errors.Wrap(err, "failed to begin transaction")
 		return
 	}
 
-	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, pn)
-	if err == nil && ppc.Certified.Valid && ppc.Certified.Bool {
-		if ppc.ParentUUID.Valid {
+	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, domain.StringValue(pi.PhoneNumber))
+	if err == nil && domain.BoolValue(ppc.Certified) == true {
+		if domain.StringValue(ppc.ParentUUID) != "" {
 			err = errors.New("this phone number is already in use")
 			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusConflict, Code: domain.PhoneAlreadyInUse}
 			_ = au.txHandler.Rollback(_tx)
 			return
 		}
-		if pa.PW, err = au.hashHandler.GenerateHashWithMinSalt(pa.PW); err != nil {
+
+		if hash, err := au.hashHandler.GenerateHashWithMinSalt(domain.StringValue(pi.PW)); err != nil {
 			err = errors.Wrap(err, "failed to GenerateHashWithMinSalt")
 			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 			_ = au.txHandler.Rollback(_tx)
-			return
+			return "", err
+		} else {
+			pi.PW = domain.String(hash)
 		}
-		if pa.UUID, err = au.parentAuthRepository.GetAvailableUUID(_tx); err != nil {
-			pa.UUID = pa.GenerateRandomUUID()
+
+		if uuid, err = au.parentAuthRepository.GetAvailableUUID(_tx); err != nil {
+			pi.UUID = domain.String(pi.GenerateRandomUUID())
+		} else {
+			pi.UUID = domain.String(uuid)
 		}
-		switch err = au.parentAuthRepository.Store(_tx, pa); tErr := err.(type) {
+		if profile != nil {
+			pi.ProfileUri = domain.String(pi.ParentAuth.GenerateProfileUri())
+		}
+
+		switch err = au.parentAuthRepository.Store(_tx, pi.ParentAuth); tErr := err.(type) {
 		case nil:
 			break
 		case domain.ErrInvalidModel:
@@ -272,7 +302,7 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pa *domain.ParentAuth, 
 		}
 	}
 
-	ppc.ParentUUID = sql.NullString{String: pa.UUID, Valid: true}
+	ppc.ParentUUID = domain.String(domain.StringValue(pi.UUID))
 	if err = au.parentPhoneCertifyRepository.Update(_tx, &ppc); err != nil {
 		err = errors.Wrap(err, "phone Update return unexpected error")
 		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
@@ -280,11 +310,32 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pa *domain.ParentAuth, 
 		return
 	}
 
+	if profile != nil {
+		b := make([]byte, profile.Size)
+		file, _ := profile.Open()
+		defer func() { _ = file.Close() }()
+		_, _ = file.Read(b)
+
+		if _, err = au.s3Agency.PutObject(&s3.PutObjectInput{
+			Bucket: aws.String(au.myCfg.ParentProfileS3Bucket()),
+			Key:    aws.String(pi.ParentAuth.GenerateProfileUri()),
+			Body:   bytes.NewReader(b),
+			ACL:    aws.String("public-read"),
+		}); err != nil {
+			err = errors.Wrap(err, "s3 PutObject return unexpected error")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
+			_ = au.txHandler.Rollback(_tx)
+			return
+		}
+	}
+
+	uuid = domain.StringValue(pi.UUID)
+	err = nil
 	_ = au.txHandler.Commit(_tx)
-	return nil
+	return
 }
 
-// LoginParentAuth is implement domain.AuthUsecase interface
+// LoginParentAuth implement LoginParentAuth method of domain.AuthUsecase interface
 func (au *authUsecase) LoginParentAuth(ctx context.Context, id, pw string) (uuid, token string, err error) {
 	_tx, err := au.txHandler.BeginTx(ctx, nil)
 	if err != nil {
@@ -295,7 +346,7 @@ func (au *authUsecase) LoginParentAuth(ctx context.Context, id, pw string) (uuid
 	pa, err := au.parentAuthRepository.GetByID(_tx, id)
 	switch err.(type) {
 	case nil:
-		switch err = au.hashHandler.CompareHashAndPW(pa.PW, pw); err.(type) {
+		switch err = au.hashHandler.CompareHashAndPW(domain.StringValue(pa.PW), pw); err.(type) {
 		case nil:
 			break
 		case interface{ Mismatch() }:
@@ -321,10 +372,80 @@ func (au *authUsecase) LoginParentAuth(ctx context.Context, id, pw string) (uuid
 		return
 	}
 
-	uuid = pa.UUID
-	token, err = au.jwtHandler.GenerateUUIDJWT(pa.UUID, "access_token", au.myCfg.AccessTokenDuration())
+	uuid = domain.StringValue(pa.UUID)
+	token, err = au.jwtHandler.GenerateUUIDJWT(uuid, "access_token", au.myCfg.AccessTokenDuration())
 	err = nil
 
 	_ = au.txHandler.Commit(_tx)
 	return
+}
+
+// GetParentInformByID implement GetParentInformByID method of domain.AuthUsecase interface
+func (au *authUsecase) GetParentInformByID(ctx context.Context, id string) (pi struct {
+	domain.ParentAuth
+	domain.ParentPhoneCertify
+}, err error) {
+	_tx, err := au.txHandler.BeginTx(ctx, nil)
+	if err != nil {
+		err = errors.Wrap(err, "failed to begin transaction")
+		return
+	}
+
+	pi, err = au.parentAuthRepository.GetByID(_tx, id)
+	switch err.(type) {
+	case nil:
+	case domain.ErrRowNotExist:
+		err = domain.UsecaseError{UsecaseErr: errors.New("not exist parent auth with that ID"), Status: http.StatusNotFound}
+		_ = au.txHandler.Rollback(_tx)
+	}
+
+	_ = au.txHandler.Commit(_tx)
+	return pi, err
+}
+
+// UpdateParentInform implement UpdateParentInform method of domain.AuthUsecase interface
+func (au *authUsecase) UpdateParentInform(ctx context.Context, uuid string, pa *domain.ParentAuth, profile *multipart.FileHeader) (err error) {
+	_tx, err := au.txHandler.BeginTx(ctx, nil)
+	if err != nil {
+		err = errors.Wrap(err, "failed to begin transaction")
+		return
+	}
+	pa.UUID = domain.String(uuid)
+
+	var b []byte
+	if profile != nil {
+		b = make([]byte, profile.Size)
+		file, _ := profile.Open()
+		defer func() { _ = file.Close() }()
+		_, _ = file.Read(b)
+		if len(b) == 0 {
+			pa.ProfileUri = domain.String("")
+		} else {
+			pa.ProfileUri = domain.String(pa.GenerateProfileUri())
+		}
+	}
+
+	if err = au.parentAuthRepository.Update(_tx, pa); err != nil {
+		err = errors.Wrap(err, "failed to Update")
+		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
+		_ = au.txHandler.Rollback(_tx)
+		return
+	}
+
+	if len(b) != 0 {
+		if _, err = au.s3Agency.PutObject(&s3.PutObjectInput{
+			Bucket: aws.String(au.myCfg.ParentProfileS3Bucket()),
+			Key:    aws.String(domain.StringValue(pa.ProfileUri)),
+			Body:   bytes.NewReader(b),
+			ACL:    aws.String("public-read"),
+		}); err != nil {
+			err = errors.Wrap(err, "s3 PutObject return unexpected error")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
+			_ = au.txHandler.Rollback(_tx)
+			return
+		}
+	}
+
+	_ = au.txHandler.Commit(_tx)
+	return nil
 }

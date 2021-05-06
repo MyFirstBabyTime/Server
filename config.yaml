@@ -9,6 +9,10 @@ app:
   ALIGO_SENDER:
   JWT_KEY:
   CLOUD_MANAGEMENT_KEY:
+  S3_REGION:
+  AWS_S3_ID:
+  AWS_S3_KEY:
 
 auth:
   accessTokenDuration: "24h"
+  parentProfileS3Bucket: "first-baby-time"

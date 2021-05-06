@@ -103,10 +103,12 @@ func (ar *parentAuthRepository) GetByID(ctx tx.Context, id string) (auth struct 
 
 // Store is implement domain.ParentAuthRepository interface
 func (ar *parentAuthRepository) Store(ctx tx.Context, pa *domain.ParentAuth) (err error) {
-	if pa.UUID == "" {
-		if pa.UUID, err = ar.GetAvailableUUID(ctx); err != nil {
+	if domain.StringValue(pa.UUID) == "" {
+		if uuid, err := ar.GetAvailableUUID(ctx); err != nil {
 			err = errors.Wrap(err, "failed to GetAvailableUUID")
-			return
+			return err
+		} else {
+			pa.UUID = domain.String(uuid)
 		}
 	}
 
@@ -154,4 +156,55 @@ func (ar *parentAuthRepository) GetAvailableUUID(ctx tx.Context) (string, error)
 			return "", errors.Wrap(err, "failed to GetByUUID")
 		}
 	}
+}
+
+// Update method update tuple of domain.ParentAuth model by UUID field value
+func (ar *parentAuthRepository) Update(ctx tx.Context, pa *domain.ParentAuth) (err error) {
+	if domain.StringValue(pa.UUID) == "" {
+		err = errors.New("UUID(PK) value in model must be set")
+		return
+	}
+
+	if err = ar.validator.ValidateStruct(pa.GenerateValidModel()); err != nil {
+		err = domain.ErrInvalidModel{RepoErr: errors.Wrap(err, "failed to validate domain.ParentAuth")}
+		return
+	}
+
+	b := squirrel.Update("parent_auth").Where("uuid = ?", pa.UUID)
+	if pa.ID != nil {
+		if *pa.ID == "" {
+			pa.ID = nil
+		}
+		b = b.Set("id", pa.ID)
+	}
+	if pa.PW != nil {
+		if *pa.PW == "" {
+			pa.PW = nil
+		}
+		b = b.Set("pw", pa.PW)
+	}
+	if pa.Name != nil {
+		if *pa.Name == "" {
+			pa.Name = nil
+		}
+		b = b.Set("name", pa.Name)
+	}
+	if pa.ProfileUri != nil {
+		if *pa.ProfileUri == "" {
+			pa.ProfileUri = nil
+		}
+		b = b.Set("profile_uri", pa.ProfileUri)
+	}
+
+	_tx, _ := ctx.Tx().(*sqlx.Tx)
+	_sql, args, err := b.ToSql()
+	if err != nil {
+		err = domain.ErrInvalidModel{RepoErr: errors.New("update statements must have at least one")}
+		return
+	}
+
+	if _, err = _tx.Exec(_sql, args...); err != nil {
+		err = errors.Wrap(err, "failed to update parent auth")
+	}
+	return
 }
