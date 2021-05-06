@@ -80,7 +80,7 @@ func main() {
 		_expenditureRepo.ExpenditureRepository(db, _ps, _vl),
 		_tx,
 	)
-	_expenditureDelivery.NewExpenditureHandler(r, eu, _vl, _jwt,)
+	_expenditureDelivery.NewExpenditureHandler(r, eu, _vl, _jwt)
 
 	cmu := _cloudMaintainerUsecase.CloudMaintainerUsecase(
 		config.App.CloudManagementKey(),

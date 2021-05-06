@@ -23,7 +23,7 @@ func ExpenditureUsecase(
 	return &expenditureUsecase{
 		expenditureRepository: er,
 
-		txHandler:  th,
+		txHandler: th,
 	}
 }
 

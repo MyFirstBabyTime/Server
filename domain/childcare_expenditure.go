@@ -9,7 +9,8 @@ import (
 )
 
 type ExpenditureUsecase interface {
-	ExpenditureRegistration(ctx context.Context, req *Expenditure, babyUUIDs *[]string) (err error)}
+	ExpenditureRegistration(ctx context.Context, req *Expenditure, babyUUIDs *[]string) (err error)
+}
 
 type ExpenditureRepository interface {
 	Store(ctx tx.Context, e *Expenditure, babyUUIDs *[]string) (err error)
