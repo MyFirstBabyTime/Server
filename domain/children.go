@@ -19,11 +19,11 @@ type ChildrenRepository interface {
 
 // Children is model represent parent children using in children domain
 type Children struct {
-	UUID       *string    `db:"uuid"`
-	ParentUUID *string    `db:"parent_uuid"`
-	Name       *string    `db:"name"`
-	Birth      *time.Time `db:"birth"`
-	Sex        *string    `db:"sex"`
+	UUID       *string    `db:"uuid" validate:"required,uuid=children"`
+	ParentUUID *string    `db:"parent_uuid" validate:"required,uuid=parent"`
+	Name       *string    `db:"name" validate:"required,min=1,max=10"`
+	Birth      *time.Time `db:"birth" validate:"required"`
+	Sex        *string    `db:"sex" validate:"required,oneof=male female"`
 	ProfileUri *string    `db:"profile_uri"`
 }
 
@@ -37,7 +37,7 @@ func (_ Children) Schema() string {
 		sex         VARCHAR(10) NOT NULL,
 		profile_uri VARCHAR(100),
 		PRIMARY KEY (uuid),
-		FOREIGN KEY (parent_uuid) REFERENCE parent_auth (uuid)
+		FOREIGN KEY (parent_uuid) REFERENCES parent_auth (uuid)
 	)
 `
 }
@@ -45,4 +45,15 @@ func (_ Children) Schema() string {
 // TableName return table name about Children model
 func (_ Children) TableName() string {
 	return "children"
+}
+
+// GenerateRandomUUID generate & return random uuid value
+func (c Children) GenerateRandomUUID() string {
+	rand.Seed(time.Now().UnixNano())
+	is := []rune("0123456789")
+	random := make([]rune, 10)
+	for i := range random {
+		random[i] = is[rand.Intn(len(is))]
+	}
+	return fmt.Sprintf("c%s", string(random))
 }
