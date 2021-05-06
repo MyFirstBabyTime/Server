@@ -42,7 +42,9 @@ func (_ Children) Schema() string {
 		sex         VARCHAR(10) NOT NULL,
 		profile_uri VARCHAR(100),
 		PRIMARY KEY (uuid),
-		FOREIGN KEY (parent_uuid) REFERENCES parent_auth (uuid)
+		FOREIGN KEY (parent_uuid)
+			REFERENCES parent_auth (uuid)
+			ON DELETE CASCADE
 	)
 `
 }
