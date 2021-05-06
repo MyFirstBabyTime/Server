@@ -1,7 +1,9 @@
 package usecase
 
 import (
+	"bytes"
 	"context"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/pkg/errors"
 	"mime/multipart"
 	"net/http"
@@ -44,7 +46,10 @@ func ChildrenUsecase(
 }
 
 // childrenUsecaseConfig is interface get config value for children usecase
-type childrenUsecaseConfig interface {}
+type childrenUsecaseConfig interface {
+	// ChildrenProfileS3Bucket return aws s3 bucket name for children profile
+	ChildrenProfileS3Bucket() string
+}
 
 // txHandler is used for handling transaction to begin & commit or rollback
 type txHandler interface {
@@ -79,6 +84,10 @@ func (cu *childrenUsecase) CreateNewChildren(ctx context.Context, c *domain.Chil
 		}
 	}
 
+	if profile != nil {
+		c.ProfileUri = domain.String(c.GenerateProfileUri())
+	}
+
 	switch err = cu.childrenRepository.Store(_tx, c); tErr := err.(type) {
 	case nil:
 		break
@@ -105,6 +114,25 @@ func (cu *childrenUsecase) CreateNewChildren(ctx context.Context, c *domain.Chil
 		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
 		_ = cu.txHandler.Rollback(_tx)
 		return
+	}
+
+	if profile != nil {
+		b := make([]byte, profile.Size)
+		file, _ := profile.Open()
+		defer func() { _ = file.Close() }()
+		_, _ = file.Read(b)
+
+		if _, err = cu.s3Agency.PutObject(&s3.PutObjectInput{
+			Bucket: aws.String(cu.myCfg.ChildrenProfileS3Bucket()),
+			Key:    aws.String(c.GenerateProfileUri()),
+			Body:   bytes.NewReader(b),
+			ACL:    aws.String("public-read"),
+		}); err != nil {
+			err = errors.Wrap(err, "s3 PutObject return unexpected error")
+			err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
+			_ = cu.txHandler.Rollback(_tx)
+			return
+		}
 	}
 
 	uuid = domain.StringValue(c.UUID)
