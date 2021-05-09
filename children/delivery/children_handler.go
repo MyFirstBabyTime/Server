@@ -1,7 +1,6 @@
 package delivery
 
 import (
-	"github.com/MyFirstBabyTime/Server/domain"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
@@ -35,4 +34,26 @@ func NewChildrenHandler(r *gin.Engine, cu domain.ChildrenUsecase, v validator, j
 	}
 
 	r.POST("parents/uuid/:parent_uuid/children", h.jwtHandler.ParseUUIDFromToken, h.CreateNewChildren)
+}
+
+// bindRequest method bind *gin.Context to request having BindFrom method
+func (ch *childrenHandler) bindRequest(req interface {
+	BindFrom(ctx *gin.Context) error
+}, c *gin.Context) error {
+	if err := req.BindFrom(c); err != nil {
+		return errors.Wrap(err, "failed to bind req")
+	}
+	if err := ch.validator.ValidateStruct(req); err != nil {
+		return errors.Wrap(err, "invalid request")
+	}
+	return nil
+}
+
+// defaultResp return response have status, code, message inform
+func defaultResp(status, code int, msg string) (resp gin.H) {
+	resp = gin.H{}
+	resp["status"] = status
+	resp["code"] = code
+	resp["message"] = msg
+	return
 }
