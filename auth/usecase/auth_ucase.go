@@ -124,7 +124,6 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 	}
 
 	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, pn)
-	ppc = domain.ParentPhoneCertify{PhoneNumber: domain.String(pn)}
 	switch err.(type) {
 	case nil:
 		if domain.StringValue(ppc.ParentUUID) != "" {
@@ -145,7 +144,10 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 			return
 		}
 	case domain.ErrRowNotExist:
-		ppc.CertifyCode = domain.Int64(ppc.GenerateCertifyCode())
+		ppc = domain.ParentPhoneCertify{
+			PhoneNumber: domain.String(pn),
+			CertifyCode: domain.Int64(ppc.GenerateCertifyCode()),
+		}
 		switch err = au.parentPhoneCertifyRepository.Store(_tx, &ppc); err.(type) {
 		case nil:
 			break
@@ -162,7 +164,7 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 		return
 	}
 
-	content := fmt.Sprintf("[육아는 처음이지 인증 번호]\n회원가입 인증 번호: %d", ppc.CertifyCode)
+	content := fmt.Sprintf("[육아는 처음이지 인증 번호]\n회원가입 인증 번호: %d", domain.Int64Value(ppc.CertifyCode))
 	if err = au.messageAgency.SendSMSToOne(domain.StringValue(ppc.PhoneNumber), content); err != nil {
 		err = errors.Wrap(err, "SendSMSToOne return unexpected error")
 		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
@@ -271,7 +273,7 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
 			return
 		case domain.ErrEntryDuplicate:
 			switch tErr.DuplicateKey {
-			case "id":
+			case "id", "parent_auth.id":
 				err = errors.New("this parent ID is already in use")
 				err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusConflict, Code: domain.ParentIDAlreadyInUse}
 				_ = au.txHandler.Rollback(_tx)
