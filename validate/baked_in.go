@@ -10,6 +10,10 @@ import (
 
 // isValidateUUID function return if uuid format is validate
 func isValidateUUID(fl validator.FieldLevel) bool {
+	if fl.Field().String() == "" {
+		return true
+	}
+
 	switch fl.Param() {
 	case "parent":
 		return parentUUIDRegex.MatchString(fl.Field().String())
@@ -39,6 +43,26 @@ func isWithinRange(fl validator.FieldLevel) bool {
 
 	field := int(fl.Field().Int())
 	return field >= start && field <= end
+}
+
+func isNotEmptyValue(fl validator.FieldLevel) bool {
+	if fl.Field().Interface() == nil {
+		return false
+	}
+
+	switch fl.Field().Kind() {
+	case reflect.String:
+		if fl.Field().String() == "" {
+			return false
+		}
+	case reflect.Int64:
+		if fl.Field().Int() == 0 {
+			return false
+		}
+	default:
+		return false
+	}
+	return true
 }
 
 // sqlNullStringTypeConverter function assert driver.Valuer & return Value()
