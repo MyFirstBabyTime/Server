@@ -229,7 +229,7 @@ func (au *authUsecase) CertifyPhoneWithCode(ctx context.Context, pn string, code
 func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
 	*domain.ParentAuth
 	*domain.ParentPhoneCertify
-}, profile *multipart.FileHeader) (uuid string, err error) {
+}, profile []byte) (uuid string, err error) {
 	_tx, err := au.txHandler.BeginTx(ctx, nil)
 	if err != nil {
 		err = errors.Wrap(err, "failed to begin transaction")
@@ -259,7 +259,7 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
 		} else {
 			pi.UUID = domain.String(uuid)
 		}
-		if profile != nil {
+		if profile != nil && string(profile) != "" {
 			pi.ProfileUri = domain.String(pi.ParentAuth.GenerateProfileUri())
 		}
 
@@ -312,16 +312,11 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
 		return
 	}
 
-	if profile != nil {
-		b := make([]byte, profile.Size)
-		file, _ := profile.Open()
-		defer func() { _ = file.Close() }()
-		_, _ = file.Read(b)
-
+	if profile != nil && string(profile) != "" {
 		if _, err = au.s3Agency.PutObject(&s3.PutObjectInput{
 			Bucket: aws.String(au.myCfg.ParentProfileS3Bucket()),
 			Key:    aws.String(pi.ParentAuth.GenerateProfileUri()),
-			Body:   bytes.NewReader(b),
+			Body:   bytes.NewReader(profile),
 			ACL:    aws.String("public-read"),
 		}); err != nil {
 			err = errors.Wrap(err, "s3 PutObject return unexpected error")
