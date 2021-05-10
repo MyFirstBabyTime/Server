@@ -34,15 +34,21 @@ func (r *certifyPhoneWithCodeRequest) BindFrom(c *gin.Context) error {
 
 // signUpParentRequest is request for authHandler.SignUpParent
 type signUpParentRequest struct {
-	ParentID    string                `form:"id" validate:"required,min=4,max=20"`
-	ParentPW    string                `form:"pw" validate:"required,min=6,max=20"`
-	Name        string                `form:"name" validate:"required,max=20"`
-	PhoneNumber string                `form:"phone_number" validate:"required,len=11"`
-	Profile     *multipart.FileHeader `form:"profile"`
+	ParentID      string                `form:"id" json:"id" validate:"required,min=4,max=20"`
+	ParentPW      string                `form:"pw" json:"pw" validate:"required,min=6,max=20"`
+	Name          string                `form:"name" json:"name" validate:"required,max=20"`
+	PhoneNumber   string                `form:"phone_number" json:"phone_number" validate:"required,len=11"`
+	Profile       *multipart.FileHeader `form:"profile"`
+	ProfileBase64 string                `json:"profile_base64"`
 }
 
 func (r *signUpParentRequest) BindFrom(c *gin.Context) error {
-	return errors.Wrap(c.Bind(r), "failed to Bind")
+	switch c.ContentType() {
+	case "application/json":
+		return errors.Wrap(c.BindJSON(r), "failed to BindJSON")
+	default:
+		return errors.Wrap(c.Bind(r), "failed to Bind")
+	}
 }
 
 type loginParentAuthRequest struct {
