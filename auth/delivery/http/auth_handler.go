@@ -1,10 +1,13 @@
 package http
 
 import (
-	"github.com/MyFirstBabyTime/Server/domain"
+	"encoding/base64"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"net/http"
+	"regexp"
+
+	"github.com/MyFirstBabyTime/Server/domain"
 )
 
 // authHandler represent the http handler for article
@@ -107,7 +110,23 @@ func (ah *authHandler) SignUpParent(c *gin.Context) {
 		},
 	}
 
-	switch uuid, err := ah.aUsecase.SignUpParent(c.Request.Context(), pi, req.Profile); tErr := err.(type) {
+	var profile []byte
+	if req.Profile != nil {
+		profile = make([]byte, req.Profile.Size)
+		file, _ := req.Profile.Open()
+		defer func() { _ = file.Close() }()
+		_, _ = file.Read(profile)
+	} else if req.ProfileBase64 != "" {
+		req.ProfileBase64 = string(regexp.MustCompile("^data:image/\\w+;base64,").ReplaceAll([]byte(req.ProfileBase64), []byte("")))
+		var err error
+		if profile, err = base64.StdEncoding.DecodeString(req.ProfileBase64); err != nil {
+			err = errors.Wrap(err, "failed to decode base64 string to byte array")
+			c.JSON(http.StatusInternalServerError, defaultResp(http.StatusInternalServerError, 0, err.Error()))
+			return
+		}
+	}
+
+	switch uuid, err := ah.aUsecase.SignUpParent(c.Request.Context(), pi, profile); tErr := err.(type) {
 	case nil:
 		resp := defaultResp(http.StatusCreated, 0, "succeed to sign up new parent auth")
 		resp["parent_uuid"] = uuid
