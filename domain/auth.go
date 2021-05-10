@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"mime/multipart"
 	"strconv"
 	"time"
 
@@ -23,7 +22,7 @@ type AuthUsecase interface {
 	SignUpParent(ctx context.Context, pi struct {
 		*ParentAuth
 		*ParentPhoneCertify
-	}, profile *multipart.FileHeader) (uuid string, err error)
+	}, profile []byte) (uuid string, err error)
 
 	// LoginParentAuth method login parent auth & return logged ParentAuth model, token
 	LoginParentAuth(ctx context.Context, id, pw string) (uuid, token string, err error)
@@ -35,7 +34,7 @@ type AuthUsecase interface {
 	}, error)
 
 	// UpdateParentInform method update ParentAuth model inform & profile image with parent uuid
-	UpdateParentInform(ctx context.Context, uuid string, pa *ParentAuth, profile *multipart.FileHeader) (err error)
+	UpdateParentInform(ctx context.Context, uuid string, pa *ParentAuth, profile []byte) (err error)
 }
 
 // ParentAuthRepository is repository interface about ParentAuth model
