@@ -5,7 +5,6 @@ import (
 	"context"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/pkg/errors"
-	"mime/multipart"
 	"net/http"
 
 	"github.com/MyFirstBabyTime/Server/domain"
@@ -69,7 +68,7 @@ type s3Agency interface {
 	PutObject(input *s3.PutObjectInput) (output *s3.PutObjectOutput, err error)
 }
 
-func (cu *childrenUsecase) CreateNewChildren(ctx context.Context, c *domain.Children, profile *multipart.FileHeader) (uuid string, err error) {
+func (cu *childrenUsecase) CreateNewChildren(ctx context.Context, c *domain.Children, profile []byte) (uuid string, err error) {
 	_tx, err := cu.txHandler.BeginTx(ctx, nil)
 	if err != nil {
 		err = errors.Wrap(err, "failed to begin transaction")
@@ -84,7 +83,7 @@ func (cu *childrenUsecase) CreateNewChildren(ctx context.Context, c *domain.Chil
 		}
 	}
 
-	if profile != nil {
+	if profile != nil && len(profile) != 0 {
 		c.ProfileUri = domain.String(c.GenerateProfileUri())
 	}
 
@@ -116,16 +115,11 @@ func (cu *childrenUsecase) CreateNewChildren(ctx context.Context, c *domain.Chil
 		return
 	}
 
-	if profile != nil {
-		b := make([]byte, profile.Size)
-		file, _ := profile.Open()
-		defer func() { _ = file.Close() }()
-		_, _ = file.Read(b)
-
+	if profile != nil && len(profile) != 0 {
 		if _, err = cu.s3Agency.PutObject(&s3.PutObjectInput{
 			Bucket: aws.String(cu.myCfg.ChildrenProfileS3Bucket()),
 			Key:    aws.String(c.GenerateProfileUri()),
-			Body:   bytes.NewReader(b),
+			Body:   bytes.NewReader(profile),
 			ACL:    aws.String("public-read"),
 		}); err != nil {
 			err = errors.Wrap(err, "s3 PutObject return unexpected error")
