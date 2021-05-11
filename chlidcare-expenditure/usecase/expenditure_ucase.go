@@ -23,7 +23,7 @@ func ExpenditureUsecase(
 	return &expenditureUsecase{
 		expenditureRepository: er,
 
-		txHandler:  th,
+		txHandler: th,
 	}
 }
 
@@ -39,7 +39,7 @@ type txHandler interface {
 	Rollback(tx tx.Context) (err error)
 }
 
-func (eu *expenditureUsecase) ExpenditureRegistration(ctx context.Context, req *domain.Expenditure, babyUUIDs *[]string) (err error) {
+func (eu *expenditureUsecase) ExpenditureRegistration(ctx context.Context, req *domain.Expenditure, babyUUIDs []string) (err error) {
 	_tx, err := eu.txHandler.BeginTx(ctx, nil)
 	if err != nil {
 		err = errors.Wrap(err, "failed to begin transaction")

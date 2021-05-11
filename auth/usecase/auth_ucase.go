@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/pkg/errors"
-	"mime/multipart"
 	"net/http"
 	"time"
 
@@ -124,7 +123,6 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 	}
 
 	ppc, err := au.parentPhoneCertifyRepository.GetByPhoneNumber(_tx, pn)
-	ppc = domain.ParentPhoneCertify{PhoneNumber: domain.String(pn)}
 	switch err.(type) {
 	case nil:
 		if domain.StringValue(ppc.ParentUUID) != "" {
@@ -145,7 +143,10 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 			return
 		}
 	case domain.ErrRowNotExist:
-		ppc.CertifyCode = domain.Int64(ppc.GenerateCertifyCode())
+		ppc = domain.ParentPhoneCertify{
+			PhoneNumber: domain.String(pn),
+			CertifyCode: domain.Int64(ppc.GenerateCertifyCode()),
+		}
 		switch err = au.parentPhoneCertifyRepository.Store(_tx, &ppc); err.(type) {
 		case nil:
 			break
@@ -162,7 +163,7 @@ func (au *authUsecase) SendCertifyCodeToPhone(ctx context.Context, pn string) (e
 		return
 	}
 
-	content := fmt.Sprintf("[육아는 처음이지 인증 번호]\n회원가입 인증 번호: %d", ppc.CertifyCode)
+	content := fmt.Sprintf("[육아는 처음이지 인증 번호]\n회원가입 인증 번호: %d", domain.Int64Value(ppc.CertifyCode))
 	if err = au.messageAgency.SendSMSToOne(domain.StringValue(ppc.PhoneNumber), content); err != nil {
 		err = errors.Wrap(err, "SendSMSToOne return unexpected error")
 		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusInternalServerError}
@@ -227,7 +228,7 @@ func (au *authUsecase) CertifyPhoneWithCode(ctx context.Context, pn string, code
 func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
 	*domain.ParentAuth
 	*domain.ParentPhoneCertify
-}, profile *multipart.FileHeader) (uuid string, err error) {
+}, profile []byte) (uuid string, err error) {
 	_tx, err := au.txHandler.BeginTx(ctx, nil)
 	if err != nil {
 		err = errors.Wrap(err, "failed to begin transaction")
@@ -257,7 +258,7 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
 		} else {
 			pi.UUID = domain.String(uuid)
 		}
-		if profile != nil {
+		if profile != nil && string(profile) != "" {
 			pi.ProfileUri = domain.String(pi.ParentAuth.GenerateProfileUri())
 		}
 
@@ -271,7 +272,7 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
 			return
 		case domain.ErrEntryDuplicate:
 			switch tErr.DuplicateKey {
-			case "id":
+			case "id", "parent_auth.id":
 				err = errors.New("this parent ID is already in use")
 				err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusConflict, Code: domain.ParentIDAlreadyInUse}
 				_ = au.txHandler.Rollback(_tx)
@@ -310,16 +311,11 @@ func (au *authUsecase) SignUpParent(ctx context.Context, pi struct {
 		return
 	}
 
-	if profile != nil {
-		b := make([]byte, profile.Size)
-		file, _ := profile.Open()
-		defer func() { _ = file.Close() }()
-		_, _ = file.Read(b)
-
+	if profile != nil && string(profile) != "" {
 		if _, err = au.s3Agency.PutObject(&s3.PutObjectInput{
 			Bucket: aws.String(au.myCfg.ParentProfileS3Bucket()),
 			Key:    aws.String(pi.ParentAuth.GenerateProfileUri()),
-			Body:   bytes.NewReader(b),
+			Body:   bytes.NewReader(profile),
 			ACL:    aws.String("public-read"),
 		}); err != nil {
 			err = errors.Wrap(err, "s3 PutObject return unexpected error")
@@ -404,7 +400,7 @@ func (au *authUsecase) GetParentInformByID(ctx context.Context, id string) (pi s
 }
 
 // UpdateParentInform implement UpdateParentInform method of domain.AuthUsecase interface
-func (au *authUsecase) UpdateParentInform(ctx context.Context, uuid string, pa *domain.ParentAuth, profile *multipart.FileHeader) (err error) {
+func (au *authUsecase) UpdateParentInform(ctx context.Context, uuid string, pa *domain.ParentAuth, profile []byte) (err error) {
 	_tx, err := au.txHandler.BeginTx(ctx, nil)
 	if err != nil {
 		err = errors.Wrap(err, "failed to begin transaction")
@@ -412,17 +408,8 @@ func (au *authUsecase) UpdateParentInform(ctx context.Context, uuid string, pa *
 	}
 	pa.UUID = domain.String(uuid)
 
-	var b []byte
-	if profile != nil {
-		b = make([]byte, profile.Size)
-		file, _ := profile.Open()
-		defer func() { _ = file.Close() }()
-		_, _ = file.Read(b)
-		if len(b) == 0 {
-			pa.ProfileUri = domain.String("")
-		} else {
-			pa.ProfileUri = domain.String(pa.GenerateProfileUri())
-		}
+	if profile != nil && len(profile) != 0 {
+		pa.ProfileUri = domain.String(pa.GenerateProfileUri())
 	}
 
 	if err = au.parentAuthRepository.Update(_tx, pa); err != nil {
@@ -432,11 +419,11 @@ func (au *authUsecase) UpdateParentInform(ctx context.Context, uuid string, pa *
 		return
 	}
 
-	if len(b) != 0 {
+	if profile != nil && len(profile) != 0 {
 		if _, err = au.s3Agency.PutObject(&s3.PutObjectInput{
 			Bucket: aws.String(au.myCfg.ParentProfileS3Bucket()),
 			Key:    aws.String(domain.StringValue(pa.ProfileUri)),
-			Body:   bytes.NewReader(b),
+			Body:   bytes.NewReader(profile),
 			ACL:    aws.String("public-read"),
 		}); err != nil {
 			err = errors.Wrap(err, "s3 PutObject return unexpected error")

@@ -1,16 +1,26 @@
 package http
 
 import (
-	"github.com/MyFirstBabyTime/Server/domain"
+	"encoding/base64"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"net/http"
+	"regexp"
+
+	"github.com/MyFirstBabyTime/Server/domain"
 )
 
 // authHandler represent the http handler for article
 type authHandler struct {
-	aUsecase  domain.AuthUsecase
-	validator validator
+	aUsecase   domain.AuthUsecase
+	validator  validator
+	jwtHandler jwtHandler
+}
+
+// jwtHandler is interface of jwt handler
+type jwtHandler interface {
+	// ParseUUIDFromToken parse token & return token payload and type
+	ParseUUIDFromToken(c *gin.Context)
 }
 
 // validator is interface used for validating struct value
@@ -19,10 +29,11 @@ type validator interface {
 }
 
 // NewAuthHandler will initialize the auth/ resources endpoint
-func NewAuthHandler(r *gin.Engine, au domain.AuthUsecase, v validator) {
+func NewAuthHandler(r *gin.Engine, au domain.AuthUsecase, v validator, jh jwtHandler) {
 	h := &authHandler{
-		aUsecase:  au,
-		validator: v,
+		aUsecase:   au,
+		validator:  v,
+		jwtHandler: jh,
 	}
 
 	r.POST("phones/phone-number/:phone_number/certify-code", h.SendCertifyCodeToPhone)
@@ -30,7 +41,7 @@ func NewAuthHandler(r *gin.Engine, au domain.AuthUsecase, v validator) {
 	r.POST("parents", h.SignUpParent)
 	r.POST("login/parent", h.LoginParentAuth)
 	r.GET("parents/id/:parent_id/existence", h.CheckIfParentIDExist)
-	r.PATCH("parents/uuid/:parent_uuid", h.UpdateParentInform)
+	r.PATCH("parents/uuid/:parent_uuid", h.jwtHandler.ParseUUIDFromToken, h.UpdateParentInform)
 }
 
 // SendCertifyCodeToPhone deliver data to SendCertifyCodeToPhone of domain.AuthUsecase
@@ -99,7 +110,23 @@ func (ah *authHandler) SignUpParent(c *gin.Context) {
 		},
 	}
 
-	switch uuid, err := ah.aUsecase.SignUpParent(c.Request.Context(), pi, req.Profile); tErr := err.(type) {
+	var profile []byte
+	if req.Profile != nil {
+		profile = make([]byte, req.Profile.Size)
+		file, _ := req.Profile.Open()
+		defer func() { _ = file.Close() }()
+		_, _ = file.Read(profile)
+	} else if req.ProfileBase64 != "" {
+		req.ProfileBase64 = string(regexp.MustCompile("^data:image/\\w+;base64,").ReplaceAll([]byte(req.ProfileBase64), []byte("")))
+		var err error
+		if profile, err = base64.StdEncoding.DecodeString(req.ProfileBase64); err != nil {
+			err = errors.Wrap(err, "failed to decode base64 string to byte array")
+			c.JSON(http.StatusInternalServerError, defaultResp(http.StatusInternalServerError, 0, err.Error()))
+			return
+		}
+	}
+
+	switch uuid, err := ah.aUsecase.SignUpParent(c.Request.Context(), pi, profile); tErr := err.(type) {
 	case nil:
 		resp := defaultResp(http.StatusCreated, 0, "succeed to sign up new parent auth")
 		resp["parent_uuid"] = uuid
@@ -165,10 +192,33 @@ func (ah *authHandler) UpdateParentInform(c *gin.Context) {
 		return
 	}
 
-	pa := &domain.ParentAuth{
-		Name: domain.String(domain.StringValue(req.Name)),
+	if c.GetString("uuid") != req.ParentUUID {
+		c.JSON(http.StatusForbidden, defaultResp(http.StatusForbidden, 0, "you can't access with that uuid token"))
+		return
 	}
-	switch err := ah.aUsecase.UpdateParentInform(c.Request.Context(), req.ParentUUID, pa, req.Profile); tErr := err.(type) {
+
+	pa := &domain.ParentAuth{}
+	if req.Name != nil {
+		pa.Name = domain.String(domain.StringValue(req.Name))
+	}
+
+	var profile []byte
+	if req.Profile != nil {
+		profile = make([]byte, req.Profile.Size)
+		file, _ := req.Profile.Open()
+		defer func() { _ = file.Close() }()
+		_, _ = file.Read(profile)
+	} else if req.ProfileBase64 != "" {
+		req.ProfileBase64 = string(regexp.MustCompile("^data:image/\\w+;base64,").ReplaceAll([]byte(req.ProfileBase64), []byte("")))
+		var err error
+		if profile, err = base64.StdEncoding.DecodeString(req.ProfileBase64); err != nil {
+			err = errors.Wrap(err, "failed to decode base64 string to byte array")
+			c.JSON(http.StatusInternalServerError, defaultResp(http.StatusInternalServerError, 0, err.Error()))
+			return
+		}
+	}
+
+	switch err := ah.aUsecase.UpdateParentInform(c.Request.Context(), req.ParentUUID, pa, profile); tErr := err.(type) {
 	case nil:
 		resp := defaultResp(http.StatusOK, 0, "succeed to update parent inform")
 		c.JSON(http.StatusOK, resp)

@@ -1,10 +1,10 @@
 package jwt
 
 import (
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -38,30 +38,38 @@ func (uh *uuidHandler) GenerateUUIDJWT(uuid, _type string, t time.Duration) (tok
 	return
 }
 
-// ParseUUIDFromToken parse uuid & type from token received from parameter
-func (uh *uuidHandler) ParseUUIDFromToken (c *gin.Context) {
-	accessToken := c.Request.Header["Authorization"][0]
+// ParseUUIDFromToken is middleware that parse uuid & type from token received from request header
+func (uh *uuidHandler) ParseUUIDFromToken(c *gin.Context) {
+	var tokenStr string
+	if tokens := c.Request.Header["Authorization"]; len(tokens) >= 1 {
+		tokenStr = tokens[0]
+	} else {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, defaultResp(http.StatusUnauthorized, 0, "Authorization not set"))
+		return
+	}
 
-	token, err := jwt.ParseWithClaims(accessToken, &uuidClaims{}, func(t *jwt.Token) (interface{}, error) {
+	if strings.Contains(tokenStr, "Bearer") {
+		tokenStr = strings.Join(strings.Split(strings.TrimPrefix(tokenStr, "Bearer"), " "), "")
+	}
+
+	token, err := jwt.ParseWithClaims(tokenStr, &uuidClaims{}, func(t *jwt.Token) (interface{}, error) {
 		return []byte(uh.jwtKey), nil
 	})
-	fmt.Println(token, err)
 
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, defaultResp(http.StatusUnauthorized, 0, err.Error()))
-		c.Abort()
+		c.AbortWithStatusJSON(http.StatusUnauthorized, defaultResp(http.StatusUnauthorized, 0, err.Error()))
 		return
 	}
 
 	claims, ok := token.Claims.(*uuidClaims)
 	if !ok || !token.Valid {
-		c.JSON(http.StatusUnauthorized, defaultResp(http.StatusUnauthorized, 0, err.Error()))
-		c.Abort()
+		c.AbortWithStatusJSON(http.StatusUnauthorized, defaultResp(http.StatusUnauthorized, 0, "failed to assert token Claim"))
 		return
 	}
 
 	c.Set("uuid", claims.UUID)
 	c.Set("_type", claims.Type)
+	c.Next() // middleware로 쓰인다는 것을 명시하기 위해 c.Next() 호출 (호출 안해도 다음으로 등록된 handler 실행되긴 함)
 }
 
 // defaultResp return response have status, code, message inform
@@ -72,4 +80,3 @@ func defaultResp(status, code int, msg string) (resp gin.H) {
 	resp["message"] = msg
 	return
 }
-

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"mime/multipart"
 	"strconv"
 	"time"
 
@@ -23,7 +22,7 @@ type AuthUsecase interface {
 	SignUpParent(ctx context.Context, pi struct {
 		*ParentAuth
 		*ParentPhoneCertify
-	}, profile *multipart.FileHeader) (uuid string, err error)
+	}, profile []byte) (uuid string, err error)
 
 	// LoginParentAuth method login parent auth & return logged ParentAuth model, token
 	LoginParentAuth(ctx context.Context, id, pw string) (uuid, token string, err error)
@@ -35,7 +34,7 @@ type AuthUsecase interface {
 	}, error)
 
 	// UpdateParentInform method update ParentAuth model inform & profile image with parent uuid
-	UpdateParentInform(ctx context.Context, uuid string, pa *ParentAuth, profile *multipart.FileHeader) (err error)
+	UpdateParentInform(ctx context.Context, uuid string, pa *ParentAuth, profile []byte) (err error)
 }
 
 // ParentAuthRepository is repository interface about ParentAuth model
@@ -62,10 +61,10 @@ type ParentPhoneCertifyRepository interface {
 
 // ParentAuth is model represent parent auth using in auth domain
 type ParentAuth struct {
-	UUID       *string `db:"uuid" validate:"required,uuid=parent"`
-	ID         *string `db:"id" validate:"required,min=4,max=20"`
-	PW         *string `db:"pw" validate:"required,min=1"`
-	Name       *string `db:"name" validate:"required,min=1,max=20"`
+	UUID       *string `db:"uuid" validate:"not_empty,uuid=parent"`
+	ID         *string `db:"id" validate:"not_empty,min=4,max=20"`
+	PW         *string `db:"pw" validate:"not_empty"`
+	Name       *string `db:"name" validate:"not_empty,max=20"`
 	ProfileUri *string `db:"profile_uri"`
 }
 
@@ -130,8 +129,8 @@ func (pa ParentAuth) GenerateValidModel() ParentAuth {
 // ParentPhoneCertify is model represent parent phone number using in auth domain
 type ParentPhoneCertify struct {
 	ParentUUID  *string `db:"parent_uuid" validate:"uuid=parent"`
-	PhoneNumber *string `db:"phone_number" validate:"required,len=11"`
-	CertifyCode *int64  `db:"certify_code" validate:"required,range=100000~999999"`
+	PhoneNumber *string `db:"phone_number" validate:"not_empty,len=11"`
+	CertifyCode *int64  `db:"certify_code" validate:"not_empty,range=100000~999999"`
 	Certified   *bool   `db:"certified"`
 }
 

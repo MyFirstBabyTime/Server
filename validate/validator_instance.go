@@ -15,6 +15,7 @@ func init() {
 
 	_ = v.RegisterValidation("uuid", isValidateUUID)
 	_ = v.RegisterValidation("range", isWithinRange)
+	_ = v.RegisterValidation("not_empty", isNotEmptyValue)
 
 	v.RegisterCustomTypeFunc(sqlNullStringTypeConverter, sql.NullString{})
 

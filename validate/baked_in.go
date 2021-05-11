@@ -19,6 +19,8 @@ func isValidateUUID(fl validator.FieldLevel) bool {
 		return parentUUIDRegex.MatchString(fl.Field().String())
 	case "item":
 		return itemUUIDRegex.MatchString(fl.Field().String())
+	case "children":
+		return childrenRegex.MatchString(fl.Field().String())
 	}
 	return false
 }
@@ -41,6 +43,26 @@ func isWithinRange(fl validator.FieldLevel) bool {
 
 	field := int(fl.Field().Int())
 	return field >= start && field <= end
+}
+
+func isNotEmptyValue(fl validator.FieldLevel) bool {
+	if fl.Field().Interface() == nil {
+		return false
+	}
+
+	switch fl.Field().Kind() {
+	case reflect.String:
+		if fl.Field().String() == "" {
+			return false
+		}
+	case reflect.Int64:
+		if fl.Field().Int() == 0 {
+			return false
+		}
+	default:
+		return false
+	}
+	return true
 }
 
 // sqlNullStringTypeConverter function assert driver.Valuer & return Value()
