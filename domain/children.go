@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"mime/multipart"
 	"time"
 
 	"github.com/MyFirstBabyTime/Server/tx"
@@ -12,7 +11,7 @@ import (
 
 // ChildrenUsecase is interface about usecase layer using in delivery layer
 type ChildrenUsecase interface {
-	CreateNewChildren(ctx context.Context, c *Children, profile *multipart.FileHeader) (uuid string, err error)
+	CreateNewChildren(ctx context.Context, c *Children, profile []byte) (uuid string, err error)
 }
 
 // ChildrenRepository is repository interface about Children model
