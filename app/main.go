@@ -32,6 +32,11 @@ import (
 
 	_cloudMaintainerDelivery "github.com/MyFirstBabyTime/Server/cloud-maintainer/delivery/http"
 	_cloudMaintainerUsecase "github.com/MyFirstBabyTime/Server/cloud-maintainer/usecase"
+
+	_childrenConfig "github.com/MyFirstBabyTime/Server/children/config"
+	_childrenHttpDelivery "github.com/MyFirstBabyTime/Server/children/delivery/http"
+	_childrenRepo "github.com/MyFirstBabyTime/Server/children/repository/mysql"
+	_childrenUcase "github.com/MyFirstBabyTime/Server/children/usecase"
 )
 
 func init() {
@@ -97,6 +102,13 @@ func main() {
 
 	cmu := _cloudMaintainerUsecase.CloudMaintainerUsecase(config.App)
 	_cloudMaintainerDelivery.NewCloudMaintainerHandler(r, cmu, _vl)
+
+	cu := _childrenUcase.ChildrenUsecase(
+		_childrenConfig.App,
+		_childrenRepo.ChildrenRepository(_childrenConfig.App, db, _ps, _vl),
+		_tx, _s3,
+	)
+	_childrenHttpDelivery.NewChildrenHandler(r, cu, _vl, _jwt)
 
 	log.Fatal(r.Run(":80"))
 }
