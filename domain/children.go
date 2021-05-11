@@ -66,5 +66,5 @@ func (c Children) GenerateRandomUUID() string {
 
 // GenerateProfileUri method return ProfileUri value with field value
 func (c Children) GenerateProfileUri() string {
-	return fmt.Sprintf("/profiles/childrends/uuid/%s", StringValue(c.UUID))
+	return fmt.Sprintf("/profiles/children/uuid/%s", StringValue(c.UUID))
 }
