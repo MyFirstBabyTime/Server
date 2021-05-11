@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/pkg/errors"
-	"mime/multipart"
 	"net/http"
 	"time"
 
@@ -401,7 +400,7 @@ func (au *authUsecase) GetParentInformByID(ctx context.Context, id string) (pi s
 }
 
 // UpdateParentInform implement UpdateParentInform method of domain.AuthUsecase interface
-func (au *authUsecase) UpdateParentInform(ctx context.Context, uuid string, pa *domain.ParentAuth, profile *multipart.FileHeader) (err error) {
+func (au *authUsecase) UpdateParentInform(ctx context.Context, uuid string, pa *domain.ParentAuth, profile []byte) (err error) {
 	_tx, err := au.txHandler.BeginTx(ctx, nil)
 	if err != nil {
 		err = errors.Wrap(err, "failed to begin transaction")
@@ -409,17 +408,8 @@ func (au *authUsecase) UpdateParentInform(ctx context.Context, uuid string, pa *
 	}
 	pa.UUID = domain.String(uuid)
 
-	var b []byte
-	if profile != nil {
-		b = make([]byte, profile.Size)
-		file, _ := profile.Open()
-		defer func() { _ = file.Close() }()
-		_, _ = file.Read(b)
-		if len(b) == 0 {
-			pa.ProfileUri = domain.String("")
-		} else {
-			pa.ProfileUri = domain.String(pa.GenerateProfileUri())
-		}
+	if profile != nil && len(profile) != 0 {
+		pa.ProfileUri = domain.String(pa.GenerateProfileUri())
 	}
 
 	if err = au.parentAuthRepository.Update(_tx, pa); err != nil {
@@ -429,11 +419,11 @@ func (au *authUsecase) UpdateParentInform(ctx context.Context, uuid string, pa *
 		return
 	}
 
-	if len(b) != 0 {
+	if profile != nil && len(profile) != 0 {
 		if _, err = au.s3Agency.PutObject(&s3.PutObjectInput{
 			Bucket: aws.String(au.myCfg.ParentProfileS3Bucket()),
 			Key:    aws.String(domain.StringValue(pa.ProfileUri)),
-			Body:   bytes.NewReader(b),
+			Body:   bytes.NewReader(profile),
 			ACL:    aws.String("public-read"),
 		}); err != nil {
 			err = errors.Wrap(err, "s3 PutObject return unexpected error")
