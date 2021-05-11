@@ -58,7 +58,7 @@ func (ch *childrenHandler) CreateNewChildren(c *gin.Context) {
 		Sex:        domain.String(req.Sex),
 	}
 
-	if t, err := time.Parse(time.RFC3339, req.Birth); err != nil {
+	if t, err := time.Parse("2006-01-02", req.Birth); err != nil {
 		err = errors.Wrap(err, "failed to parse birth time string")
 		c.JSON(http.StatusBadRequest, defaultResp(http.StatusBadRequest, 0, err.Error()))
 		return
