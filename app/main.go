@@ -94,6 +94,7 @@ func main() {
 	eu := _expenditureUcase.ExpenditureUsecase(
 		_expenditureRepo.ExpenditureRepository(db, _ps, _vl),
 		_tx,
+		_es,
 	)
 	_expenditureDelivery.NewExpenditureHandler(r, eu, _vl, _jwt)
 
