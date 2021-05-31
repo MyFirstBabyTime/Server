@@ -212,4 +212,17 @@ func (ac *appConfig) AwsS3Key() string {
 	return *ac.awsS3Key
 }
 
+func (ac *appConfig) EsEndPoint() string {
+	if ac.esEndPoint != nil {
+		return *ac.esEndPoint
+	}
+
+	if viper.IsSet("AWS_ELASTICSEARCH_ENDPOINT") {
+		ac.esEndPoint = _string(viper.GetString("AWS_ELASTICSEARCH_ENDPOINT"))
+	} else {
+		log.Fatal("please set AWS_ELASTICSEARCH_ENDPOINT in environment variable")
+	}
+	return *ac.esEndPoint
+}
+
 func _string(s string) *string { return &s }
