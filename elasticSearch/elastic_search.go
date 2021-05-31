@@ -8,3 +8,7 @@ import (
 	"log"
 	"strings"
 )
+
+type elasticSearch struct {
+	es *elasticsearch.Client
+}
