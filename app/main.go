@@ -81,6 +81,7 @@ func main() {
 	_hash := hash.BcryptHandler()
 	_jwt := jwt.UUIDHandler(config.App.JwtKey())
 	_s3 := s3.New(s3Ses)
+	_es := elasticSearch.New(config.App.EsEndPoint())
 
 	au := _authUcase.AuthUsecase(
 		_authConfig.App,
