@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/Masterminds/squirrel v1.5.0
 	github.com/VividCortex/mysqlerr v0.0.0-20201215173831-4c396ae82aac
-	github.com/aws/aws-sdk-go v1.38.34
+	github.com/aws/aws-sdk-go v1.38.33
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/elastic/go-elasticsearch/v8 v8.0.0-20210519083322-55daf7425ecb
 	github.com/gin-contrib/cors v1.3.1
