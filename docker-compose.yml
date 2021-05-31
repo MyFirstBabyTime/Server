@@ -26,6 +26,7 @@ services:
       - AWS_S3_ID=${AWS_S3_ID}
       - AWS_S3_KEY=${AWS_S3_KEY}
       - S3_PROFILE_BUCKET=${S3_PROFILE_BUCKET}
+      - AWS_ELASTICSEARCH_ENDPOINT=${AWS_ELASTICSEARCH_ENDPOINT}
     volumes:
 #      - /Users/yumyeongcheol/Desktop/mspring03/project/Server/config.yaml:/usr/share/first-baby-time/config.yaml
       - ./config.yaml:/usr/share/first-baby-time/config.yaml
