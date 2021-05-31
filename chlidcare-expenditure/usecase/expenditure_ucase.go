@@ -27,7 +27,7 @@ func ExpenditureUsecase(
 	return &expenditureUsecase{
 		expenditureRepository: er,
 
-		txHandler: th,
+		txHandler:     th,
 		elasticSearch: es,
 	}
 }
@@ -105,7 +105,7 @@ func (eu *expenditureUsecase) ExpenditureRegistration(ctx context.Context, req *
 		return
 	}
 
-	body, _ := esRequestBodyGenerator(req, &babyUUIDs)
+	body, _ := esRequestBodyGenerator(req, babyUUIDs)
 	err = eu.elasticSearch.Create(ctx, "Expenditure", body)
 
 	if err != nil {
@@ -119,16 +119,16 @@ func (eu *expenditureUsecase) ExpenditureRegistration(ctx context.Context, req *
 	return nil
 }
 
-func esRequestBodyGenerator(req *domain.Expenditure, babyUUIDS *[]string) (string, error) {
+func esRequestBodyGenerator(req *domain.Expenditure, babyUUIDS []string) (string, error) {
 	data := make(map[string]interface{})
 
-	data["UUID"] 	   = req.UUID
+	data["UUID"] = req.UUID
 	data["ParentUUID"] = req.ParentUUID
-	data["Name"]       = req.Name
-	data["Amount"]     = req.Amount
-	data["Rating"]     = req.Rating
-	data["Link"]       = req.Link
-	data["baby"]	   = *babyUUIDS
+	data["Name"] = req.Name
+	data["Amount"] = req.Amount
+	data["Rating"] = req.Rating
+	data["Link"] = req.Link
+	data["baby"] = babyUUIDS
 
 	body, err := json.Marshal(data)
 
