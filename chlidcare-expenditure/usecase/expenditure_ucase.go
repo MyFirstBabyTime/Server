@@ -44,6 +44,10 @@ type txHandler interface {
 	Rollback(tx tx.Context) (err error)
 }
 
+type elasticSearch interface {
+	Create(ctx context.Context, index string, s string) (err error)
+}
+
 func (eu *expenditureUsecase) ExpenditureRegistration(ctx context.Context, req *domain.Expenditure, babyUUIDs []string) (err error) {
 	_tx, err := eu.txHandler.BeginTx(ctx, nil)
 	if err != nil {
