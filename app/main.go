@@ -13,6 +13,7 @@ import (
 	"log"
 
 	"github.com/MyFirstBabyTime/Server/app/config"
+	"github.com/MyFirstBabyTime/Server/elasticSearch"
 	"github.com/MyFirstBabyTime/Server/hash"
 	"github.com/MyFirstBabyTime/Server/jwt"
 	"github.com/MyFirstBabyTime/Server/message"
