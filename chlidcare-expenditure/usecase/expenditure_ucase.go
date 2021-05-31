@@ -118,3 +118,19 @@ func (eu *expenditureUsecase) ExpenditureRegistration(ctx context.Context, req *
 	_ = eu.txHandler.Commit(_tx)
 	return nil
 }
+
+func esRequestBodyGenerator(req *domain.Expenditure, babyUUIDS *[]string) (string, error) {
+	data := make(map[string]interface{})
+
+	data["UUID"] 	   = req.UUID
+	data["ParentUUID"] = req.ParentUUID
+	data["Name"]       = req.Name
+	data["Amount"]     = req.Amount
+	data["Rating"]     = req.Rating
+	data["Link"]       = req.Link
+	data["baby"]	   = *babyUUIDS
+
+	body, err := json.Marshal(data)
+
+	return string(body), err
+}
