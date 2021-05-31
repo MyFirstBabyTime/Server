@@ -45,6 +45,8 @@ type appConfig struct {
 
 	// awsS3Key represent aws s3 key
 	awsS3Key *string
+
+	esEndPoint *string
 }
 
 // ConfigFile return config file get from environment variable
