@@ -13,6 +13,7 @@ import (
 	"log"
 
 	"github.com/MyFirstBabyTime/Server/app/config"
+	"github.com/MyFirstBabyTime/Server/elasticSearch"
 	"github.com/MyFirstBabyTime/Server/hash"
 	"github.com/MyFirstBabyTime/Server/jwt"
 	"github.com/MyFirstBabyTime/Server/message"
@@ -85,6 +86,7 @@ func main() {
 	_hash := hash.BcryptHandler()
 	_jwt := jwt.UUIDHandler(config.App.JwtKey())
 	_s3 := s3.New(s3Ses)
+	_es := elasticSearch.New(config.App.EsEndPoint())
 
 	au := _authUcase.AuthUsecase(
 		_authConfig.App,
@@ -97,6 +99,7 @@ func main() {
 	eu := _expenditureUcase.ExpenditureUsecase(
 		_expenditureRepo.ExpenditureRepository(db, _ps, _vl),
 		_tx,
+		_es,
 	)
 	_expenditureDelivery.NewExpenditureHandler(r, eu, _vl, _jwt)
 
