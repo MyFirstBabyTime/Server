@@ -28,3 +28,14 @@ func New(esEndPoint string) *elasticSearch {
 		es,
 	}
 }
+
+func (es *elasticSearch) Create(ctx context.Context, index string, s string) (err error) {
+	req := esapi.IndexRequest{
+		Index: index,
+		Body:  strings.NewReader(s),
+	}
+
+	_, err = req.Do(ctx, es.es)
+
+	return
+}
