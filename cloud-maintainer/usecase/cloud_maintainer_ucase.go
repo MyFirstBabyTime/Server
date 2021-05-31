@@ -13,19 +13,23 @@ import (
 // cloudMaintainerUsecase is used for usecase layer which implement domain.CloudMaintainerUsecase interface
 type cloudMaintainerUsecase struct {
 	// cloudManagementKey is used for check valid user before redeploy
-	cloudManagementKey string
+	myCfg cloudMaintainerUsecaseConfig
 }
 
 // CloudMaintainerUsecase return implementation of domain.CloudMaintainerUsecase
-func CloudMaintainerUsecase(cloudManagementKey string) domain.CloudMaintainerUsecase {
+func CloudMaintainerUsecase(cfg cloudMaintainerUsecaseConfig) domain.CloudMaintainerUsecase {
 	return &cloudMaintainerUsecase{
-		cloudManagementKey: cloudManagementKey,
+		myCfg: cfg,
 	}
+}
+
+type cloudMaintainerUsecaseConfig interface {
+	CloudManagementKey() string
 }
 
 // ContainerRedeploy is implement domain.CloudMaintainerUsecase interface
 func (cu *cloudMaintainerUsecase) ContainerRedeploy(ctx context.Context, key string, image string) (err error) {
-	if cu.cloudManagementKey != key {
+	if cu.myCfg.CloudManagementKey() != key {
 		err = errors.New("cloudManagementKey is do not match")
 		err = domain.UsecaseError{UsecaseErr: err, Status: http.StatusForbidden}
 		return

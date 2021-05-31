@@ -64,8 +64,8 @@ func (pp *parentPhoneCertifyRepository) GetByPhoneNumber(ctx tx.Context, pn stri
 
 // Store is implement domain.ParentPhoneCertifyRepository interface
 func (pp *parentPhoneCertifyRepository) Store(ctx tx.Context, ppc *domain.ParentPhoneCertify) (err error) {
-	if ppc.CertifyCode == 0 {
-		ppc.CertifyCode = ppc.GenerateCertifyCode()
+	if domain.Int64Value(ppc.CertifyCode) == 0 {
+		ppc.CertifyCode = domain.Int64(ppc.GenerateCertifyCode())
 	}
 
 	if err = pp.validator.ValidateStruct(ppc); err != nil {
@@ -103,7 +103,7 @@ func (pp *parentPhoneCertifyRepository) Store(ctx tx.Context, ppc *domain.Parent
 // Update is implement domain.ParentPhoneCertifyRepository interface
 // where -> PK, set -> field with value set (so, cannot set to NULL in this method)
 func (pp *parentPhoneCertifyRepository) Update(ctx tx.Context, ppc *domain.ParentPhoneCertify) (err error) {
-	if ppc.PhoneNumber == "" {
+	if domain.StringValue(ppc.PhoneNumber) == "" {
 		err = errors.New("PhoneNumber(PK) value in model must be set")
 		return
 	}
@@ -114,14 +114,14 @@ func (pp *parentPhoneCertifyRepository) Update(ctx tx.Context, ppc *domain.Paren
 	}
 
 	b := squirrel.Update("parent_phone_certify").Where("phone_number = ?", ppc.PhoneNumber)
-	if v, err := ppc.ParentUUID.Value(); err == nil && v != nil {
-		b = b.Set("parent_uuid", v)
+	if ppc.ParentUUID != nil {
+		b = b.Set("parent_uuid", ppc.ParentUUID)
 	}
-	if ppc.CertifyCode != 0 {
+	if ppc.CertifyCode != nil {
 		b = b.Set("certify_code", ppc.CertifyCode)
 	}
-	if v, err := ppc.Certified.Value(); err == nil && v != nil {
-		b = b.Set("certified", v)
+	if ppc.Certified != nil {
+		b = b.Set("certified", ppc.Certified)
 	}
 
 	_tx, _ := ctx.Tx().(*sqlx.Tx)

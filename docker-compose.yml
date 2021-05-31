@@ -1,11 +1,13 @@
 version: '3.5'
 services:
   server:
-    image: mspring03/first-baby-time:${VERSION}.RELEASE
+#    image: mspring03/first-baby-time:${VERSION}.RELEASE
+    image: ${DOCKER_USER}/first-baby-time:${VERSION}.RELEASE
     container_name: server
     ports:
     - target: 80
-      published: 80
+#      published: 80
+      published: 8000
       protocol: tcp
       mode: host
     environment:
@@ -20,8 +22,14 @@ services:
       - ALIGO_SENDER=${ALIGO_SENDER}
       - JWT_KEY=${JWT_KEY}
       - CLOUD_MANAGEMENT_KEY=${CLOUD_MANAGEMENT_KEY}
+      - S3_REGION=${S3_REGION}
+      - AWS_S3_ID=${AWS_S3_ID}
+      - AWS_S3_KEY=${AWS_S3_KEY}
+      - S3_PROFILE_BUCKET=${S3_PROFILE_BUCKET}
+      - AWS_ELASTICSEARCH_ENDPOINT=${AWS_ELASTICSEARCH_ENDPOINT}
     volumes:
-      - /Users/yumyeongcheol/Desktop/mspring03/project/Server/config.yaml:/usr/share/first-baby-time/config.yaml
+#      - /Users/yumyeongcheol/Desktop/mspring03/project/Server/config.yaml:/usr/share/first-baby-time/config.yaml
+      - ./config.yaml:/usr/share/first-baby-time/config.yaml
       - /var/run/docker.sock:/var/run/docker.sock
     deploy:
       mode: replicated
@@ -29,31 +37,3 @@ services:
       update_config:
         parallelism: 1
         failure_action: rollback
-#  zookeeper:
-#    image: debezium/zookeeper:1.2
-#    ports:
-#      - 2181:2181
-#      - 2888:2888
-#      - 3888:3888
-#  kafka:
-#    image: debezium/kafka:1.2
-#    ports:
-#      - 9092:9092
-#    links:
-#      - zookeeper
-#    environment:
-#      - ZOOKEEPER_CONNECT=zookeeper:2181
-#  connect:
-#    image: debezium/connect:1.4
-#    ports:
-#      - 8083:8083
-#    links:
-#      - zookeeper
-#      - kafka
-#    environment:
-#      - BOOTSTRAP_SERVERS=kafka:9092
-#      - GROUP_ID=1
-#      - CONFIG_STORAGE_TOPIC=my_connect_configs
-#      - OFFSET_STORAGE_TOPIC=my_connect_offsets
-#      - STATUS_STORAGE_TOPIC=my_connect_statuses
-
