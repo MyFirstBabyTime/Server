@@ -22,11 +22,13 @@ type expenditureUsecase struct {
 func ExpenditureUsecase(
 	er domain.ExpenditureRepository,
 	th txHandler,
+	es elasticSearch,
 ) *expenditureUsecase {
 	return &expenditureUsecase{
 		expenditureRepository: er,
 
 		txHandler: th,
+		elasticSearch: es,
 	}
 }
 
